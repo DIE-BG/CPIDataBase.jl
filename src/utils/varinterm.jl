@@ -1,10 +1,34 @@
-# varinterm.jl - basic operations to compute price change arrays
+# varinterm.jl - basic operations to compute price change arrays. Operaciones
+# básicas para computar vectores o matrices de variaciones intermensuales de
+# índices de precios
 
 """
-    varinterm!(v, idx, base_index::Real = 100)
+    varinterm(idx::AbstractVecOrMat, base_index = 100)
 
-Fill `v` vector of price changes of `idx` vector using `base_index` as starting point.
+Función para computar un vector o una matriz de variaciones intermensuales de los
+índices de precios en `idx`, utilizando como índice base `base_index` en la
+primera observación. 
+
+Ver también: [`varinterm!`](@ref)
 """
+function varinterm end
+
+"""
+    varinterm!([v::AbstractVecOrMat, ] idx::AbstractVecOrMat, base_index = 100)
+
+Función para computar un vector o una matriz de variaciones intermensuales de
+los índices de precios en `idx`, utilizando como índice base `base_index` en la
+primera observación. Si `idx` es una matriz, `v` es opcional y el cómputo se
+realiza sobre la misma matriz. Si `idx` es un vector, es necesario proporcionar
+`v` para realizar el cómputo.
+
+Ver también: [`varinterm`](@ref).
+"""
+function varinterm! end
+
+
+## Definición de métodos
+
 function varinterm!(v::AbstractVector, idx::AbstractVector, base_index::Real = 100)
     l = length(v)
     for i in l:-1:2
@@ -13,24 +37,12 @@ function varinterm!(v::AbstractVector, idx::AbstractVector, base_index::Real = 1
     v[1] = 100 * (idx[1] / base_index - 1)
 end
 
-
-"""
-    varinterm(idx::AbstractVector, base_index::Real = 100)
-
-Function to get a vector of price changes from a price index vector starting with `base_index`.
-"""
 function varinterm(idx::AbstractVector, base_index::Real = 100)
     v = similar(idx)
     varinterm!(v, idx, base_index)
     v
 end
 
-
-"""
-    varinterm(cpimat::AbstractMatrix, base_index::Real = 100)
-
-Function to get a matrix of price changes from a price index matrix starting with `base_index`.
-"""
 function varinterm(cpimat::AbstractMatrix, base_index::Real = 100)
     c = size(cpimat, 2)
     vmat = similar(cpimat)
@@ -42,11 +54,6 @@ function varinterm(cpimat::AbstractMatrix, base_index::Real = 100)
     vmat
 end
 
-"""
-    varinterm(cpimat::AbstractMatrix, base_index::AbstractVector)
-
-Function to get a matrix of price changes from a price index matrix starting with **vector** `base_index`.
-"""
 function varinterm(cpimat::AbstractMatrix, base_index::AbstractVector)
     c = size(cpimat, 2)
     vmat = similar(cpimat)
@@ -58,11 +65,6 @@ function varinterm(cpimat::AbstractMatrix, base_index::AbstractVector)
     vmat
 end
 
-"""
-    varinterm!(cpimat::AbstractMatrix, base_index::Real = 100)
-
-Function to get a matrix of price changes from a price index matrix starting with `base_index`.
-"""
 function varinterm!(cpimat::AbstractMatrix, base_index::Real = 100)
     c = size(cpimat, 2)
     for j in 1:c
@@ -75,7 +77,7 @@ end
 """
     varinterm(base::IndexCPIBase)
 
-This returns a new instance (copy) of type `VarCPIBase` from an `IndexCPIBase`.
+Devuelve una nueva copia de tipo `VarCPIBase` de un `IndexCPIBase`.
 """
 function varinterm(base::IndexCPIBase)
     VarCPIBase(base)
