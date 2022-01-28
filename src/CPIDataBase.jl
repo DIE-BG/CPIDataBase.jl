@@ -8,6 +8,7 @@ module CPIDataBase
 
     using Dates
     using CSV, DataFrames
+    using JLD2
 
     # Exportar tipos
     export IndexCPIBase, VarCPIBase, FullCPIBase
@@ -75,32 +76,37 @@ module CPIDataBase
     #   ------------------------------------------------------------------------
 
     export gt00, gt10 # Datos del IPC con precisión de 32 bits
-    export dgt00, dgt10 # Datos del IPC con precisión doble de 64 bits
-    export gtdata, dgtdata # CountryStructure wrappers
+    export gtdata # CountryStructure wrapper
 
-    const PROJECT_ROOT = pkgdir(@__MODULE__)
+    PROJECT_ROOT = pkgdir(@__MODULE__)
     datadir(file) = joinpath(PROJECT_ROOT, "data", file)
-    @info "Exportando datos del IPC en variables `gt00`, `gt10`, `gtdata`"
+    const maindatafile = datadir("gtdata32.jld2")
+    const doubledatafile = datadir("gtdata64.jld2")
 
-    # Base 2000
-    gt_base00 = CSV.read(datadir("Guatemala_IPC_2000.csv"), DataFrame, normalizenames=true)
-    gt00gb = CSV.read(datadir("Guatemala_GB_2000.csv"), DataFrame, types=[String, String, Float64])
+    function __init__()
+        if !isfile(maindatafile)
+            @warn "Archivo principal de datos no encontrado. Construya el paquete para generar los archivos de datos necesarios. Puede utilizar `import Pkg; Pkg.build(\"CPIDataBase\")`"
+        else
+            load_data()
+        end
+    end
 
-    full_gt00 = FullCPIBase(gt_base00, gt00gb)
-    dgt00 = VarCPIBase(full_gt00)
-    gt00 = convert(Float32, dgt00)
+    """
+        load_data(; full_precision = false)
 
-    # Base 2010
-    gt_base10 = CSV.read(datadir("Guatemala_IPC_2010.csv"), DataFrame, normalizenames=true)
-    gt10gb = CSV.read(datadir("Guatemala_GB_2010.csv"), DataFrame, types=[String, String, Float64])
+    Carga los datos del archivo principal de datos `HEMI.maindatafile` del IPC
+    con precisión de 32 bits. 
+    - La opción `full_precision` permite cargar datos con precisión de 64 bits.
+    - Archivo principal: `HEMI.maindatafile = joinpath(pkgdir(@__MODULE__), "data", "gtdata32.jld2")`.
+    """
+    function load_data(; full_precision::Bool = false) 
+        datafile = full_precision ? doubledatafile : maindatafile 
 
-    full_gt10 = FullCPIBase(gt_base10, gt10gb)
-    dgt10 = VarCPIBase(full_gt10)
-    gt10 = convert(Float32, dgt10)
+        @info "Cargando datos de Guatemala..."
+        global gt00, gt10, gtdata = load(datafile, "gt00", "gt10", "gtdata")
 
-    gtdata = UniformCountryStructure(gt00, gt10)
-    dgtdata = UniformCountryStructure(dgt00, dgt10)
-
-    @info "Datos cargados exitosamente" gtdata
+        # Exportar datos del módulo 
+        @info "Archivo de datos cargado" data=datafile gtdata
+    end
 
 end

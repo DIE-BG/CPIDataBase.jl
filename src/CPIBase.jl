@@ -94,10 +94,66 @@ end
 """
     FullCPIBase(df::DataFrame, gb::DataFrame)
 
-Este constructor devuelve una estructura `FullCPIBase` a partir del DataFrame 
-de índices de precios `df`, que contiene en las columnas las categorías o gastos 
-básicos del IPC y en las filas los períodos por meses. Las ponderaciones se obtienen 
-de la estructura `gb`, en la columna denominada `:Ponderacion`.
+Este constructor devuelve una estructura `FullCPIBase` a partir de los 
+DataFrames de índices de precios `df` y de descripción de los gastos básicos
+`gb`. 
+- El DataFrame `df` posee la siguiente estructura: 
+    - Contiene en la primera columna las fechas o períodos de los datos. En las
+      siguientes columnas, debe contener los códigos de cada una de las
+      categorías o gastos básicos de la estructura del IPC. 
+    - En las filas del DataFrame contiene los períodos por meses. 
+    - Un ejemplo de cómo puede verse este DataFrame es el siguiente: 
+```
+121×219 DataFrame
+ Row │ Fecha       _011111  _011121  _011131  _011141  _011 ⋯
+     │ Date        Float64  Float64  Float64  Float64  Floa ⋯
+─────┼───────────────────────────────────────────────────────   
+   1 │ 2000-12-01   100.0    100.0    100.0    100.0    100 ⋯   
+   2 │ 2001-01-01   100.55   103.23   101.66   106.47   100  
+   3 │ 2001-02-01   101.47   104.82   102.73   108.38   101  
+   4 │ 2001-03-01   101.44   107.74   104.9    103.76   101  
+   5 │ 2001-04-01   101.91   107.28   106.19   107.83   101 ⋯   
+   6 │ 2001-05-01   102.77   106.12   106.9    109.16   101  
+   7 │ 2001-06-01   103.23   109.04   107.4    112.13   102  
+   8 │ 2001-07-01   104.35   112.72   107.96   117.19   105  
+   9 │ 2001-08-01   106.18   116.69   110.18   119.91   106 ⋯  
+  10 │ 2001-09-01   106.42   118.4    110.43   120.16   107  
+  11 │ 2001-10-01   106.97   120.96   111.16   122.73   108  
+  12 │ 2001-11-01   107.22   124.4    113.09   124.55   112  
+  13 │ 2001-12-01   107.55   129.46   117.95   129.76   113 ⋯  
+  14 │ 2002-01-01   107.77   135.75   120.16   134.5    113  
+  ⋮  │     ⋮          ⋮        ⋮        ⋮        ⋮        ⋮ ⋱
+```
+
+- El DataFrame `gb` posee la siguiente estructura: 
+    - La primera columna contiene los códigos de las columnas del DataFrame
+      `df`. 
+    - La segunda columna contiene el nombre o la descripción de cada una de las
+      categorías en las columnas de `df`. 
+    - Y finalmente, la tercer columna, debe contener las ponderaciones asociadas
+      a cada una de las categorías o gastos básicos de las columnas de `df`.
+    - Un ejemplo de cómo puede verse este DataFrame es el siguiente: 
+```
+218×3 DataFrame
+ Row │ Codigo  GastoBasico
+     │ String  String
+─────┼──────────────────────────────────────────────
+   1 │ 011111  Arroz
+   2 │ 011121  Pan
+   3 │ 011131  Pastas frescas y secas
+   4 │ 011141  Productos de tortillería
+   5 │ 011142  Productos de pastelería y rep…
+   6 │ 011151  Maíz
+   7 │ 011152  Otros cereales
+   8 │ 011153  Harina de maíz
+   9 │ 011154  Molienda de Maiz
+  10 │ 011211  Carne bovina fresca, refrigerada…
+  11 │ 011221  Carne de cerdo fresca, refrigera…
+  12 │ 011231  Carne de aves fresca, refrigerad…
+  13 │ 011241  Embutidos frescos o refrigerados…
+  14 │ 011311  Pescado fresco o seco, refrigera…
+  ⋮  │   ⋮                     ⋮                  ⋮
+```
 """
 function FullCPIBase(df::DataFrame, gb::DataFrame)
     # Obtener matriz de índices de precios
@@ -105,7 +161,7 @@ function FullCPIBase(df::DataFrame, gb::DataFrame)
     # Matrices de variaciones intermensuales de índices de precios
     v_mat = 100 .* (ipc_mat[2:end, :] ./ ipc_mat[1:end-1, :] .- 1)
     # Ponderación de gastos básicos o categorías
-    w = gb[!, :Ponderacion]
+    w = gb[!, 3]
     # Actualización de fechas
     dates = df[2, 1]:Month(1):df[end, 1] 
     # Estructura de variaciones intermensuales de base del IPC
@@ -119,7 +175,9 @@ end
 Este constructor devuelve una estructura `VarCPIBase` a partir del DataFrame 
 de índices de precios `df`, que contiene en las columnas las categorías o gastos 
 básicos del IPC y en las filas los períodos por meses. Las ponderaciones se obtienen 
-de la estructura `gb`, en la columna denominada `:Ponderacion`.
+de la estructura `gb`, en la tercera columna de ponderaciones.
+
+Para conocer la estructura de los DataFrames necesarios, vea también: [`FullCPIBase`](@ref).
 """
 function VarCPIBase(df::DataFrame, gb::DataFrame)
     # Obtener estructura completa
@@ -142,7 +200,9 @@ VarCPIBase(base::IndexCPIBase) = convert(VarCPIBase, deepcopy(base))
 Este constructor devuelve una estructura `IndexCPIBase` a partir del DataFrame 
 de índices de precios `df`, que contiene en las columnas las categorías o gastos 
 básicos del IPC y en las filas los períodos por meses. Las ponderaciones se obtienen 
-de la estructura `gb`, en la columna denominada `:Ponderacion`.
+de la estructura `gb`, en la tercera columna de ponderaciones.
+
+Para conocer la estructura de los DataFrames necesarios, vea también: [`FullCPIBase`](@ref).
 """
 function IndexCPIBase(df::DataFrame, gb::DataFrame)
     # Obtener estructura completa
