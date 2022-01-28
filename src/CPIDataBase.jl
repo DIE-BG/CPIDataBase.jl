@@ -67,7 +67,7 @@ module CPIDataBase
         export getrandomweights, getbasedates, 
             getzerobase, getzerocountryst
 
-        include("test/test_helpers.jl")
+        include("helpers/test_helpers.jl")
     end
 
     ##  ------------------------------------------------------------------------
