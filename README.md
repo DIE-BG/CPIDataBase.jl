@@ -5,3 +5,6 @@
 [![Build Status](https://github.com/r2cp/CPIDataBase.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/r2cp/CPIDataBase.jl/actions/workflows/CI.yml?query=branch%3Amain)
 
 Tipos y operaciones básicas para manejo de datos del IPC de Guatemala.
+
+*Nota: esta recopilación de datos proviene del sitio web del Instituto Nacional de Estadística.*
+> https://www.ine.gob.gt/ine/estadisticas/bases-de-datos/indice-de-precios-al-consumidor/
