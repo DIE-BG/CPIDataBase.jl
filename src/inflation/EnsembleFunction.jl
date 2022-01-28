@@ -49,3 +49,13 @@ function (ensfn::EnsembleFunction)(cs::CountryStructure)
     mapreduce(inflfn -> inflfn(cs), hcat, ensfn.functions)::Matrix{eltype(cs)}
 end
 
+## Métodos de ayuda
+
+"""
+    components(inflfn::EnsembleFunction)
+
+Devuelve un `DataFrame` con las componentes del `EnsembleFunction`.
+"""
+function components(inflfn::EnsembleFunction)
+    DataFrame(measure = measure_name(inflfn))
+end
