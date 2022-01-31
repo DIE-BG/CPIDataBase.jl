@@ -55,7 +55,7 @@ function show(io::IO, cst::CountryStructure)
         println(io, "|─> ", sprint(show, base))
     end
 end
-
+# possible chars '├', '└', '│', '─', '⋮'
 
 # Conversión entre tipos de datos flotantes
 

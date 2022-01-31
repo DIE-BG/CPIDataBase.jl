@@ -80,11 +80,12 @@ module CPIDataBase
 
     PROJECT_ROOT = pkgdir(@__MODULE__)
     datadir(file) = joinpath(PROJECT_ROOT, "data", file)
-    const maindatafile = datadir("gtdata32.jld2")
-    const doubledatafile = datadir("gtdata64.jld2")
+    const MAIN_DATAFILE = datadir("gtdata32.jld2")
+    const DOUBLE_DATAFILE = datadir("gtdata64.jld2")
+    const DATAFRAMES_FILE = datadir("gtdataframes.jld2")
 
     function __init__()
-        if !isfile(maindatafile)
+        if !isfile(MAIN_DATAFILE)
             @warn "Archivo principal de datos no encontrado. Construya el paquete para generar los archivos de datos necesarios. Puede utilizar `import Pkg; Pkg.build(\"CPIDataBase\")`"
         else
             load_data()
@@ -94,19 +95,19 @@ module CPIDataBase
     """
         load_data(; full_precision = false)
 
-    Carga los datos del archivo principal de datos `HEMI.maindatafile` del IPC
+    Carga los datos del archivo principal de datos del IPC definido en `MAIN_DATAFILE` 
     con precisión de 32 bits. 
-    - La opción `full_precision` permite cargar datos con precisión de 64 bits.
-    - Archivo principal: `HEMI.maindatafile = joinpath(pkgdir(@__MODULE__), "data", "gtdata32.jld2")`.
+    - La opción `full_precision` permite cargar los datos con precisión de 64 bits.
+    - Archivo principal: `MAIN_DATAFILE = joinpath(pkgdir(@__MODULE__), "data", "gtdata32.jld2")`.
     """
     function load_data(; full_precision::Bool = false) 
-        datafile = full_precision ? doubledatafile : maindatafile 
+        datafile = full_precision ? DOUBLE_DATAFILE : MAIN_DATAFILE 
 
         @info "Cargando datos de Guatemala..."
         global gt00, gt10, gtdata = load(datafile, "gt00", "gt10", "gtdata")
 
         # Exportar datos del módulo 
-        @info "Archivo de datos cargado" data=datafile gtdata
+        @info "Archivo de datos cargado" gtdata
     end
 
 end

@@ -15,11 +15,20 @@ const DATETYPE = StepRange{Date, Month}
 """
     FullCPIBase{T, B} <: AbstractCPIBase{T}
 
+    FullCPIBase(ipc::Matrix{T}, v::Matrix{T}, w::Vector{T}, dates::DATETYPE, baseindex::B) where {T, B}
+    
 Contenedor completo para datos del IPC de un país. Se representa por:
-- Matriz de índices de precios `ipc` que incluye la fila con los índices del númbero base. 
-- Matriz de variaciones intermensuales `v`. En las filas contiene los períodos y en las columnas contiene los gastos básicos.
+- Matriz de índices de precios `ipc` que incluye la fila con los índices del
+  número base. 
+- Matriz de variaciones intermensuales `v`. En las filas contiene los períodos y
+  en las columnas contiene los gastos básicos.
 - Vector de ponderaciones `w` de los gastos básicos.
 - Fechas correspondientes `dates` (por meses).
+- Índices base `baseindex`. 
+
+El tipo `T` representa el tipo de datos para representar los valores de punto
+flotante. El tipo `B` representa el tipo del campo `baseindex`; por ejemplo,
+`Float32` o `Vector{Float32}`.
 """
 Base.@kwdef struct FullCPIBase{T, B} <: AbstractCPIBase{T}
     ipc::Matrix{T}
@@ -44,6 +53,11 @@ Contenedor genérico de índices de precios del IPC de un país. Se representa p
 - Matriz de índices de precios `ipc` que incluye la fila con los índices del númbero base. 
 - Vector de ponderaciones `w` de los gastos básicos.
 - Fechas correspondientes `dates` (por meses).
+- Índices base `baseindex`. 
+
+El tipo `T` representa el tipo de datos para representar los valores de punto
+flotante. El tipo `B` representa el tipo del campo `baseindex`; por ejemplo,
+`Float32` o `Vector{Float32}`.
 """
 Base.@kwdef struct IndexCPIBase{T, B} <: AbstractCPIBase{T}
     ipc::Matrix{T}
@@ -62,10 +76,28 @@ end
 """
     VarCPIBase{T, B} <: AbstractCPIBase{T}
 
-Contenedor genérico para de variaciones intermensuales de índices de precios del IPC de un país. Se representa por:
-- Matriz de variaciones intermensuales `v`. En las filas contiene los períodos y en las columnas contiene los gastos básicos.
+    VarCPIBase(v::Matrix{T}, w::Vector{T}, dates::DATETYPE, baseindex::B) where {T, B}
+
+Contenedor genérico para de variaciones intermensuales de índices de precios del
+IPC de un país. Se representa por:
+- Matriz de variaciones intermensuales `v`. En las filas contiene los períodos y
+  en las columnas contiene los gastos básicos.
 - Vector de ponderaciones `w` de los gastos básicos.
 - Fechas correspondientes `dates` (por meses).
+- Índices base `baseindex`. 
+
+Este tipo es el utilizado en el contenedor de bases del IPC de un país,
+denominado [`CountryStructure`](@ref), ya que con los datos de un
+`VarCPIBase` es suficiente para computar cualquier medida de inflación basada en
+índices de precios individuales o en un estadístico de resumen de las
+variaciones intermensuales (como un percentil, o una media truncada).
+
+El tipo `T` representa el tipo de datos para representar los valores de punto
+flotante. El tipo `B` representa el tipo del campo `baseindex`; por ejemplo,
+`Float32` o `Vector{Float32}`.
+
+Ver también: [`CountryStructure`](@ref), [`UniformCountryStructure`](@ref),
+[`MixedCountryStructure`](@ref)
 """
 Base.@kwdef struct VarCPIBase{T, B} <: AbstractCPIBase{T}
     v::Matrix{T}
@@ -94,35 +126,45 @@ end
 """
     FullCPIBase(df::DataFrame, gb::DataFrame)
 
-Este constructor devuelve una estructura `FullCPIBase` a partir de los 
+Este método constructor devuelve una estructura `FullCPIBase` a partir de los
 DataFrames de índices de precios `df` y de descripción de los gastos básicos
 `gb`. 
 - El DataFrame `df` posee la siguiente estructura: 
     - Contiene en la primera columna las fechas o períodos de los datos. En las
       siguientes columnas, debe contener los códigos de cada una de las
-      categorías o gastos básicos de la estructura del IPC. 
-    - En las filas del DataFrame contiene los períodos por meses. 
+      categorías o gastos básicos de la estructura del IPC, junto con la serie
+      de tiempo con los índices de precios individuales. 
+    - En las filas del DataFrame contiene los períodos por meses. La primera
+      fila del DataFrame se utiliza para obtener el índice base. Si el valor es
+      el mismo para todos los gastos básicos, se tomará únicamente este valor
+      escalar (por ejemplo 100.0 como un Float64). En algunos casos, es posible
+      que no se disponga de la información completa, por lo que los índices base
+      podrían ser diferentes entre sí. En este caso, `baseindex` almacenará el
+      vector de índices base originales. 
     - Un ejemplo de cómo puede verse este DataFrame es el siguiente: 
 ```
 121×219 DataFrame
- Row │ Fecha       _011111  _011121  _011131  _011141  _011 ⋯
-     │ Date        Float64  Float64  Float64  Float64  Floa ⋯
-─────┼───────────────────────────────────────────────────────   
-   1 │ 2000-12-01   100.0    100.0    100.0    100.0    100 ⋯   
-   2 │ 2001-01-01   100.55   103.23   101.66   106.47   100  
-   3 │ 2001-02-01   101.47   104.82   102.73   108.38   101  
-   4 │ 2001-03-01   101.44   107.74   104.9    103.76   101  
-   5 │ 2001-04-01   101.91   107.28   106.19   107.83   101 ⋯   
-   6 │ 2001-05-01   102.77   106.12   106.9    109.16   101  
-   7 │ 2001-06-01   103.23   109.04   107.4    112.13   102  
-   8 │ 2001-07-01   104.35   112.72   107.96   117.19   105  
-   9 │ 2001-08-01   106.18   116.69   110.18   119.91   106 ⋯  
-  10 │ 2001-09-01   106.42   118.4    110.43   120.16   107  
-  11 │ 2001-10-01   106.97   120.96   111.16   122.73   108  
-  12 │ 2001-11-01   107.22   124.4    113.09   124.55   112  
-  13 │ 2001-12-01   107.55   129.46   117.95   129.76   113 ⋯  
-  14 │ 2002-01-01   107.77   135.75   120.16   134.5    113  
-  ⋮  │     ⋮          ⋮        ⋮        ⋮        ⋮        ⋮ ⋱
+ Row │ Date         _011111  _011121  _011131  _011141  _011142  _011151  _011152 ⋯
+     │ Date         Float64  Float64  Float64  Float64  Float64  Float64  Float64 ⋯
+─────┼─────────────────────────────────────────────────────────────────────────────
+   1 │ 2000-12-01   100.0    100.0    100.0    100.0    100.0    100.0    100.0   ⋯
+   2 │ 2001-01-01   100.55   103.23   101.66   106.47   100.36   100.0    102.57   
+   3 │ 2001-02-01   101.47   104.82   102.73   108.38   101.37   100.0    103.35   
+   4 │ 2001-03-01   101.44   107.74   104.9    103.76   101.32   100.0    104.27   
+   5 │ 2001-04-01   101.91   107.28   106.19   107.83   101.82   100.0    104.73  ⋯
+   6 │ 2001-05-01   102.77   106.12   106.9    109.16   101.81   100.0    105.21   
+   7 │ 2001-06-01   103.23   109.04   107.4    112.13   102.72   100.0    105.47   
+   8 │ 2001-07-01   104.35   112.72   107.96   117.19   105.09   100.0    105.66   
+  ⋮  │     ⋮          ⋮        ⋮        ⋮        ⋮        ⋮        ⋮        ⋮     ⋱
+ 114 │ 2010-05-01   218.45   501.39   200.28   477.5    179.0    215.0    164.16  ⋯
+ 115 │ 2010-06-01   219.28   503.35   203.88   476.26   180.94   214.02   164.97   
+ 116 │ 2010-07-01   219.1    503.78   205.19   478.34   181.78   217.6    165.9    
+ 117 │ 2010-08-01   218.52   507.45   206.87   486.72   181.51   223.76   166.46   
+ 118 │ 2010-09-01   218.9    505.8    206.45   501.23   182.04   228.34   166.04  ⋯
+ 119 │ 2010-10-01   219.51   504.41   205.78   504.4    182.35   221.98   166.3    
+ 120 │ 2010-11-01   219.11   509.63   205.41   502.88   182.16   217.01   166.34   
+ 121 │ 2010-12-01   218.79   511.38   205.09   506.04   182.14   218.63   165.99   
+                                                   211 columns and 105 rows omitted
 ```
 
 - El DataFrame `gb` posee la siguiente estructura: 
@@ -132,27 +174,23 @@ DataFrames de índices de precios `df` y de descripción de los gastos básicos
       categorías en las columnas de `df`. 
     - Y finalmente, la tercer columna, debe contener las ponderaciones asociadas
       a cada una de las categorías o gastos básicos de las columnas de `df`.
+    - Los nombres de las columnas no son tomados en cuenta, solamente el orden y
+      los tipos.
     - Un ejemplo de cómo puede verse este DataFrame es el siguiente: 
 ```
 218×3 DataFrame
- Row │ Codigo  GastoBasico
-     │ String  String
-─────┼──────────────────────────────────────────────
-   1 │ 011111  Arroz
-   2 │ 011121  Pan
-   3 │ 011131  Pastas frescas y secas
-   4 │ 011141  Productos de tortillería
-   5 │ 011142  Productos de pastelería y rep…
-   6 │ 011151  Maíz
-   7 │ 011152  Otros cereales
-   8 │ 011153  Harina de maíz
-   9 │ 011154  Molienda de Maiz
-  10 │ 011211  Carne bovina fresca, refrigerada…
-  11 │ 011221  Carne de cerdo fresca, refrigera…
-  12 │ 011231  Carne de aves fresca, refrigerad…
-  13 │ 011241  Embutidos frescos o refrigerados…
-  14 │ 011311  Pescado fresco o seco, refrigera…
-  ⋮  │   ⋮                     ⋮                  ⋮
+ Row │ Code     GoodOrService                       Weight
+     │ String   String                              Float64     
+─────┼────────────────────────────────────────────────────────
+   1 │ _011111  Arroz                               0.483952
+   2 │ _011121  Pan                                 2.82638
+   3 │ _011131  Pastas frescas y secas              0.341395
+   4 │ _011141  Productos de tortillería            1.69133
+  ⋮  │   ⋮                     ⋮                     ⋮
+ 216 │ _093111  Gastos por seguros                  0.236691
+ 217 │ _093121  Gastos por servicios funerarios     0.289885
+ 218 │ _094111  Gastos por servicios diversos pa…   0.151793
+                                              211 rows omitted
 ```
 """
 function FullCPIBase(df::DataFrame, gb::DataFrame)
@@ -253,19 +291,19 @@ eltype(::AbstractCPIBase{T}) where {T} = T
 ## Métodos para mostrar los tipos
 
 function _formatdate(fecha)
-    Dates.format(fecha, dateformat"u-yyyy")
+    Dates.format(fecha, dateformat"u-yy")
 end
 
 function summary(io::IO, base::AbstractCPIBase)
     field = hasproperty(base, :v) ? :v : :ipc
-    periodos, gastos = size(getproperty(base, field))
-    print(io, typeof(base), ": ", periodos, " × ", gastos)
+    periods, ngoods = size(getproperty(base, field))
+    print(io, typeof(base), ": ", periods, " × ", ngoods)
 end
 
 function show(io::IO, base::AbstractCPIBase)
     field = hasproperty(base, :v) ? :v : :ipc
-    periodos, gastos = size(getproperty(base, field))
-    print(io, typeof(base), ": ", periodos, " períodos × ", gastos, " gastos básicos ")
+    periods, ngoods = size(getproperty(base, field))
+    print(io, typeof(base), ": ", periods, " períodos × ", ngoods, " gastos básicos ")
     datestart, dateend = _formatdate.((first(base.dates), last(base.dates)))
     print(io, datestart, "-", dateend)
 end
