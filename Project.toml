@@ -1,7 +1,7 @@
 name = "CPIDataBase"
 uuid = "bc2aee9a-d1f8-4cce-8750-9c1afc923989"
 authors = ["Rodrigo Chang"]
-version = "0.3.4"
+version = "0.3.5"
 
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
