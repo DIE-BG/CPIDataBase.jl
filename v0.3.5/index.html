@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Home · CPIDataBase.jl</title><script data-outdated-warner src="assets/warner.js"></script><link rel="canonical" href="https://r2cp.github.io/CPIDataBase.jl/"/><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.039/juliamono-regular.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.11/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="assets/documenter.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><script src="../copy.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href>CPIDataBase.jl</a></span></div><form class="docs-search" action="search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li class="is-active"><a class="tocitem" href>Home</a></li><li><a class="tocitem" href="API/">API</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Home</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Home</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/r2cp/CPIDataBase.jl/blob/master/docs/src/index.md#" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="CPIDataBase"><a class="docs-heading-anchor" href="#CPIDataBase">CPIDataBase</a><a id="CPIDataBase-1"></a><a class="docs-heading-anchor-permalink" href="#CPIDataBase" title="Permalink"></a></h1><p>Este paquete provee estructuras de datos y operaciones básicas para el análisis del Índice de Precios al Consumidor (IPC) de Guatemala. Los datos provistos en este paquete provienen de una <a href="https://www.ine.gob.gt/ine/estadisticas/bases-de-datos/indice-de-precios-al-consumidor/">recopilación del sitio web del Instituto Nacional de Estadística de Guatemala</a>. El objetivo de este paquete es proveer una herramienta de análisis y consulta de los datos desagregados del IPC de Guatemala para estudios relacionados con la inflación.</p><p>La estructura principal de datos es un contenedor de tipo <a href="API/#CPIDataBase.CountryStructure"><code>CountryStructure</code></a>. Los datos de Guatemala se encuentran disponibles en la constante <code>gtdata</code> al cargar el paquete: </p><pre><code class="language-julia hljs">using CPIDataBase
+gtdata</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">UniformCountryStructure{2, Float32, Float32} con 2 bases
+|─&gt; VarCPIBase{Float32, Float32}: 120 períodos × 218 gastos básicos Jan-01-Dec-10
+|─&gt; VarCPIBase{Float32, Float32}: 132 períodos × 279 gastos básicos Jan-11-Dec-21
+</code></pre><p>Este contenedor posee los datos del IPC de Guatemala de las últimas dos décadas. Está dividido en dos estructuras de datos denominadas <a href="API/#CPIDataBase.VarCPIBase"><code>VarCPIBase</code></a>. Con la estructura <code>gtdata</code> es posible computar el Índice de Precios al Consumidor de Guatemala: </p><pre><code class="language-julia hljs">inflfn = InflationTotalCPI()
+inflfn(gtdata, CPIIndex())</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">252-element Vector{Float32}:
+ 101.346436
+ 102.07123
+ 102.599594
+ 103.01826
+ 103.31078
+ 104.029854
+ 104.86375
+ 106.1513
+ 106.48333
+ 107.33254
+   ⋮
+ 288.3578
+ 288.82974
+ 289.3736
+ 290.32486
+ 290.91983
+ 291.54346
+ 292.59125
+ 294.00974
+ 294.52313</code></pre><p>En este ejemplo, la variable <code>inflfn</code> denota una &quot;función de inflación&quot;. Utilizando diferentes funciones de inflación podemos computar diferentes medidas de inflación con los datos desagregados del IPC. Por ejemplo, el siguiente código computa la variación interanual del IPC, ampliamente utilizada como una medida de inflación en las economías del mundo: </p><pre><code class="language-julia hljs">inflfn = InflationTotalCPI()
+inflfn(gtdata)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">241-element Vector{Float32}:
+ 8.719707
+ 8.6865425
+ 8.902157
+ 9.005642
+ 9.147131
+ 9.226524
+ 9.102488
+ 9.139276
+ 7.7949524
+ 7.197356
+ ⋮
+ 5.204487
+ 5.1767945
+ 3.9100409
+ 3.8115025
+ 3.6110997
+ 3.6742926
+ 2.9544473
+ 2.8820872
+ 3.0668378</code></pre></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="API/">API »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.12 on <span class="colophon-date" title="Tuesday 1 February 2022 21:08">Tuesday 1 February 2022</span>. Using Julia version 1.7.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
