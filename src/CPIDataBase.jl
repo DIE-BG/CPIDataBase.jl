@@ -7,8 +7,7 @@ desagregados del IPC a nivel de república.
 module CPIDataBase
 
     using Dates
-    using CSV, DataFrames
-    using JLD2
+    using DataFrames
 
     # Exportar tipos
     export IndexCPIBase, VarCPIBase, FullCPIBase
@@ -69,45 +68,6 @@ module CPIDataBase
             getzerobase, getzerocountryst
 
         include("helpers/test_helpers.jl")
-    end
-
-    ##  ------------------------------------------------------------------------
-    #   Cargar y exportar datos del IPC
-    #   ------------------------------------------------------------------------
-
-    export gt00, gt10 # Datos del IPC con precisión de 32 bits
-    export gtdata # CountryStructure wrapper
-
-    PROJECT_ROOT = pkgdir(@__MODULE__)
-    datadir(file) = joinpath(PROJECT_ROOT, "data", file)
-    const MAIN_DATAFILE = datadir("gtdata32.jld2")
-    const DOUBLE_DATAFILE = datadir("gtdata64.jld2")
-    const DATAFRAMES_FILE = datadir("gtdataframes.jld2")
-
-    function __init__()
-        if !isfile(MAIN_DATAFILE)
-            @warn "Archivo principal de datos no encontrado. Construya el paquete para generar los archivos de datos necesarios. Puede utilizar `import Pkg; Pkg.build(\"CPIDataBase\")`"
-        else
-            load_data()
-        end
-    end
-
-    """
-        load_data(; full_precision = false)
-
-    Carga los datos del archivo principal de datos del IPC definido en `MAIN_DATAFILE` 
-    con precisión de 32 bits. 
-    - La opción `full_precision` permite cargar los datos con precisión de 64 bits.
-    - Archivo principal: `MAIN_DATAFILE = joinpath(pkgdir(@__MODULE__), "data", "gtdata32.jld2")`.
-    """
-    function load_data(; full_precision::Bool = false) 
-        datafile = full_precision ? DOUBLE_DATAFILE : MAIN_DATAFILE 
-
-        @info "Cargando datos de Guatemala..."
-        global gt00, gt10, gtdata = load(datafile, "gt00", "gt10", "gtdata")
-
-        # Exportar datos del módulo 
-        @info "Archivo de datos cargado" gtdata
     end
 
 end

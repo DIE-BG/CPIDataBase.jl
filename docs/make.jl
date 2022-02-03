@@ -13,6 +13,7 @@ makedocs(;
         canonical="https://die-bg.github.io/CPIDataBase.jl",
         assets=String[],
     ),
+    # format=Documenter.LaTeX(), 
     pages=[
         "Home" => "index.md",
         "API" => "API.md",

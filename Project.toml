@@ -1,17 +1,13 @@
 name = "CPIDataBase"
 uuid = "bc2aee9a-d1f8-4cce-8750-9c1afc923989"
 authors = ["Rodrigo Chang and DIE-BG collaborators"]
-version = "0.3.6"
+version = "0.4.0"
 
 [deps]
-CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
-JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
 
 [compat]
-JLD2 = "0.4"
-CSV = "0.10"
 DataFrames = "1"
 julia = "1.6"
 
