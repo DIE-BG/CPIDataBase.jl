@@ -2,10 +2,34 @@
 import Base: show, summary, convert, getindex, eltype
 
 # Tipo abstracto para definir contenedores del IPC
+"""
+    abstract type AbstractCPIBase{T <: AbstractFloat}
+
+Tipo abstracto para representar conjuntos de colecciones de datos del IPC. 
+
+Vea también: [`FullCPIBase`](@ref), [`VarCPIBase`](@ref) e [`IndexCPIBase`](@ref).
+"""
 abstract type AbstractCPIBase{T <: AbstractFloat} end
 
 # Tipos para los vectores de fechas
-const DATETYPE = StepRange{Date, Month}
+"""
+    const DATETYPE = Union{StepRange{Date, Month}, Vector{Date}}
+Tipos posibles para el campo de fechas `dates` de un [`AbstractCPIBase`](@ref).
+"""
+const DATETYPE = Union{StepRange{Date, Month}, Vector{Date}}
+
+# Tipos para los vectores de códigos y nombres
+"""
+    const DESCTYPE = Union{Vector{String}, Nothing}
+Tipos posibles para los nombres en el campo `names` de un [`FullCPIBase`](@ref).
+"""
+const DESCTYPE = Union{Vector{String}, Nothing}
+
+"""
+    const CODETYPE = Union{Vector{String}, Nothing}
+Tipos posibles para los códigos en el campo `codes` de un [`FullCPIBase`](@ref).
+"""
+const CODETYPE = Union{Vector{String}, Nothing}
 
 # El tipo B representa el tipo utilizado para almacenar los índices base. 
 # Puede ser un tipo flotante, por ejemplo, Float64 o bien, si los datos 
@@ -15,7 +39,7 @@ const DATETYPE = StepRange{Date, Month}
 """
     FullCPIBase{T, B} <: AbstractCPIBase{T}
 
-    FullCPIBase(ipc::Matrix{T}, v::Matrix{T}, w::Vector{T}, dates::DATETYPE, baseindex::B) where {T, B}
+    FullCPIBase(ipc::Matrix{T}, v::Matrix{T}, w::Vector{T}, dates::DATETYPE, baseindex::B, codes::CODETYPE, names::DESCTYPE) where {T, B}
     
 Contenedor completo para datos del IPC de un país. Se representa por:
 - Matriz de índices de precios `ipc` que incluye la fila con los índices del
@@ -25,6 +49,7 @@ Contenedor completo para datos del IPC de un país. Se representa por:
 - Vector de ponderaciones `w` de los gastos básicos.
 - Fechas correspondientes `dates` (por meses).
 - Índices base `baseindex`. 
+- Códigos y nombres de los gastos básicos en `codes` y `names`.
 
 El tipo `T` representa el tipo de datos para representar los valores de punto
 flotante. El tipo `B` representa el tipo del campo `baseindex`; por ejemplo,
@@ -36,18 +61,23 @@ Base.@kwdef struct FullCPIBase{T, B} <: AbstractCPIBase{T}
     w::Vector{T}
     dates::DATETYPE
     baseindex::B
+    codes::CODETYPE
+    names::DESCTYPE
 
-    function FullCPIBase(ipc::Matrix{T}, v::Matrix{T}, w::Vector{T}, dates::DATETYPE, baseindex::B) where {T, B}
+    function FullCPIBase(ipc::Matrix{T}, v::Matrix{T}, w::Vector{T}, dates::DATETYPE, baseindex::B, codes::CODETYPE=nothing, names::DESCTYPE=nothing) where {T, B}
+        @debug "Sizes:" size(ipc) size(v) length(dates) first(dates) last(dates)
         size(ipc, 2) == size(v, 2) || throw(ArgumentError("número de columnas debe coincidir entre matriz de índices y variaciones"))
         size(ipc, 2) == length(w) || throw(ArgumentError("número de columnas debe coincidir con vector de ponderaciones"))
         size(ipc, 1) == size(v, 1) == length(dates) || throw(ArgumentError("número de filas de `ipc` debe coincidir con vector de fechas"))
-        new{T, B}(ipc, v, w, dates, baseindex)
+        new{T, B}(ipc, v, w, dates, baseindex, codes, names)
     end
 end
 
 
 """
     IndexCPIBase{T, B} <: AbstractCPIBase{T}
+    
+    IndexCPIBase(ipc::Matrix{T}, w::Vector{T}, dates::DATETYPE, baseindex::B) where {T, B}
 
 Contenedor genérico de índices de precios del IPC de un país. Se representa por:
 - Matriz de índices de precios `ipc` que incluye la fila con los índices del númbero base. 
@@ -202,8 +232,14 @@ function FullCPIBase(df::DataFrame, gb::DataFrame)
     w = gb[!, 3]
     # Actualización de fechas
     dates = df[2, 1]:Month(1):df[end, 1] 
+    # Revisión de códigos 
+    codes_df = names(df)[2:end]
+    codes_gb = convert.(String, gb[:, 1])
+    (codes_df == codes_gb) || throw(AssertionError("Códigos en las columnas de `df` deben coincidir con códigos en las filas de `gb`"))
+    # Nombres
+    names_gb = gb[:, 2]
     # Estructura de variaciones intermensuales de base del IPC
-    return FullCPIBase(ipc_mat[2:end, :], v_mat, w, dates, _getbaseindex(ipc_mat[1, :]))
+    return FullCPIBase(ipc_mat[2:end, :], v_mat, w, dates, _getbaseindex(ipc_mat[1, :]), codes_gb, names_gb)
 end
 
 
@@ -265,13 +301,15 @@ convert(::Type{T}, base::VarCPIBase) where {T <: AbstractFloat} =
 convert(::Type{T}, base::IndexCPIBase) where {T <: AbstractFloat} = 
     IndexCPIBase(convert.(T, base.ipc), convert.(T, base.w), base.dates, convert.(T, base.baseindex))
 convert(::Type{T}, base::FullCPIBase) where {T <: AbstractFloat} = 
-    FullCPIBase(convert.(T, base.ipc), convert.(T, base.v), convert.(T, base.w), base.dates, convert.(T, base.baseindex))
+    FullCPIBase(convert.(T, base.ipc), convert.(T, base.v), convert.(T, base.w), base.dates, convert.(T, base.baseindex), base.codes, base.names)
 
+# OJO: 
 # Estos métodos no crean copias, como se indica en la documentación: 
 # > If T is a collection type and x a collection, the result of convert(T, x) 
 # > may alias all or part of x.
 # Al convertir de esta forma se muta la matriz de variaciones intermensuales y se
 # devuelve el mismo tipo, pero sin asignar nueva memoria
+
 function convert(::Type{IndexCPIBase}, base::VarCPIBase)
     vmat = base.v
     capitalize!(vmat, base.baseindex)
@@ -282,6 +320,12 @@ function convert(::Type{VarCPIBase}, base::IndexCPIBase)
     ipcmat = base.ipc
     varinterm!(ipcmat, base.baseindex)
     VarCPIBase(ipcmat, base.w, base.dates, base.baseindex)
+end
+
+# Función de conversión de FullCPIBase -> VarCPIBase, no crea copia de los datos
+# subyacentes.  
+function convert(::Type{VarCPIBase}, base::FullCPIBase)
+    VarCPIBase(base.v, base.w, base.dates, base.baseindex)
 end
 
 # Tipo de flotante del contenedor
@@ -297,15 +341,47 @@ end
 function summary(io::IO, base::AbstractCPIBase)
     field = hasproperty(base, :v) ? :v : :ipc
     periods, ngoods = size(getproperty(base, field))
-    print(io, typeof(base), ": ", periods, " × ", ngoods)
-end
-
-function show(io::IO, base::AbstractCPIBase)
-    field = hasproperty(base, :v) ? :v : :ipc
-    periods, ngoods = size(getproperty(base, field))
     print(io, typeof(base), ": ", periods, " períodos × ", ngoods, " gastos básicos ")
     datestart, dateend = _formatdate.((first(base.dates), last(base.dates)))
     print(io, datestart, "-", dateend)
+    # print(io, "└─→ ", propertynames(base))
+end
+
+function show(io::IO, base::Union{VarCPIBase, IndexCPIBase})
+    summary(io, base)
+    println(io)
+    field = hasproperty(base, :v) ? :v : :ipc
+    pretty_table(io, getproperty(base, field); 
+        cell_first_line_only = true,
+        row_names = base.dates, 
+        show_row_number = true, 
+        row_name_column_title = "Dates",
+        header = (1:length(base.w), base.w), 
+        crop = :both,
+        vcrop_mode = :middle,
+        formatters = ft_printf("%0.4f")
+    )
+end
+
+function show(io::IO, base::FullCPIBase)
+    summary(io, base)
+    println(io)
+    pretty_table(io, hcat(base.codes, base.names, base.w);
+        show_row_number = true, 
+        alignment = :l,
+        header = ["Code", "Description", "Weight"],
+        crop = :both, 
+        vcrop_mode = :middle,
+    )
+    pretty_table(io, base.ipc; 
+        row_names = base.dates, 
+        show_row_number = true, 
+        row_name_column_title = "Dates",
+        header = (base.codes, base.w), 
+        crop = :both,
+        vcrop_mode = :middle,
+        formatters = ft_printf("%0.2f"),
+    )
 end
 
 """

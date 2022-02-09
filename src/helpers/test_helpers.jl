@@ -21,7 +21,7 @@ end
 
 
 """
-    get_zero_base(T_type=Float32, G=218, T_periods=120, startdate=Date(2001,1), baseindex=100*one(T_type))
+    getzerobase(T_type=Float32, G=218, T_periods=120, startdate=Date(2001,1), baseindex=100*one(T_type))
 Función para obtener base de tipo `VarCPIBase` con variaciones intermensuales
 iguales a cero.
 """
@@ -41,4 +41,16 @@ function getzerocountryst(T_type=Float32)
     gt00 = getzerobase(T_type, 218, 120, Date(2001, 1))
     gt10 = getzerobase(T_type, 279, 120, Date(2011, 1))
     UniformCountryStructure(gt00, gt10)
+end
+
+"""
+    getrandombase(T_type=Float32, G=218, T_periods=120, startdate=Date(2001,1), baseindex=100*one(T_type))
+Función para obtener una base de tipo `VarCPIBase` con variaciones
+intermensuales aleatorias.
+"""
+function getrandombase(T_type=Float32, G=218, T_periods=120, startdate=Date(2001,1), baseindex=100*one(T_type))
+    vmat = randn(T_type, T_periods, G)
+    w = getrandomweights(T_type, G)
+    dates = getbasedates(vmat, startdate)
+    VarCPIBase(vmat, w, dates, baseindex)
 end

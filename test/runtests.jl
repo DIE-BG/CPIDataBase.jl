@@ -1,4 +1,5 @@
 using CPIDataBase, Dates
+using CPIDataBase.TestHelpers
 using Test
 
 @testset "Create types" begin
@@ -125,8 +126,6 @@ end
 
 @testset "Inflation with MixedCountryStructure" begin
     
-    using Dates, CPIDataBase
-
     GB = 200
     PER = 120
     baseindex = rand(100:0.5:110, GB)
@@ -170,3 +169,11 @@ end
     @test mcs[2] == vcpi_uniform
 
 end
+
+
+# # @testset "Inflation values and dates with disjoint VarCPIBase objects" begin 
+
+#     base1 = getrandombase(Float32, 218, 120, Date(2001,1))
+#     base2 = getrandombase(Float32, 279, 120, Date(2011,4), rand(100:0.25:105, 279))
+#     cst = MixedCountryStructure(base1, base2)
+# # end

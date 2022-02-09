@@ -50,9 +50,10 @@ end
 
 function show(io::IO, cst::CountryStructure)
     l = length(cst.base)
-    println(io, typeof(cst), " con ", l, " bases")
+    suffix = l == 1 ? " base" : " bases"
+    println(io, typeof(cst), " con ", l, suffix)
     for base in cst.base
-        println(io, "|─> ", sprint(show, base))
+        println(io, "└─→ ", sprint(summary, base))
     end
 end
 # possible chars '├', '└', '│', '─', '⋮'
@@ -216,3 +217,5 @@ Fechas correspondientes a la trayectorias de inflación computadas a partir un
 """
 infl_dates(cst::CountryStructure) = 
     first(cst.base).dates[12]:Month(1):last(cst.base).dates[end]
+
+# TO-DO: Resolver problema de infl_dates con bases disconexas en el CountryStructure

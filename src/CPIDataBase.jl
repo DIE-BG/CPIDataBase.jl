@@ -8,6 +8,7 @@ module CPIDataBase
 
     using Dates
     using DataFrames
+    using PrettyTables
 
     # Exportar tipos
     export IndexCPIBase, VarCPIBase, FullCPIBase
@@ -64,8 +65,11 @@ module CPIDataBase
     module TestHelpers
         using Dates, ..CPIDataBase    
         
-        export getrandomweights, getbasedates, 
-            getzerobase, getzerocountryst
+        export getrandomweights, 
+            getbasedates, 
+            getzerobase, 
+            getrandombase,
+            getzerocountryst
 
         include("helpers/test_helpers.jl")
     end
