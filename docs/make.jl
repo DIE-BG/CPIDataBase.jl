@@ -6,7 +6,7 @@ DocMeta.setdocmeta!(CPIDataBase, :DocTestSetup, :(using CPIDataBase); recursive=
 makedocs(;
     modules=[CPIDataBase],
     authors="Rodrigo Chang and DIE-BG collaborators",
-    repo="https://github.com/die-bg/CPIDataBase.jl/blob/{commit}{path}#{line}",
+    repo="https://github.com/DIE-BG/CPIDataBase.jl/blob/{commit}{path}#{line}",
     sitename="CPIDataBase.jl",
     format=Documenter.HTML(;
         prettyurls=get(ENV, "CI", "false") == "true",
@@ -21,6 +21,6 @@ makedocs(;
 )
 
 deploydocs(;
-    repo="github.com/die-bg/CPIDataBase.jl",
+    repo="github.com/DIE-BG/CPIDataBase.jl",
     devbranch="main",
 )
