@@ -32,7 +32,8 @@ printnode(io::IO, g::Group) = print(io, g.code * ": " * g.name * " [" * string(g
 function Base.show(io::IO, g::Group)
     println(io, typeof(g)) 
     # Show by default only the first depth level of the tree
-    print_tree(io, g, maxdepth=1)
+    # print_tree(io, g, maxdepth=1)
+    print_tree(io, g)
 end
 
 g1 = Good(FGT10.codes[1], FGT10.names[1], FGT10.w[1])
@@ -154,3 +155,75 @@ cpi_00_tree = get_cpi_tree(
 cpi_00_tree
 print_tree(cpi_00_tree)
 
+## Alias for the CPI 2010 base (don't work for the 2000 base)
+
+# const CPISubgroup = Group{Good}
+# const CPIGroup = Group{CPISubgroup}
+# const CPIAgrupation = Group{CPIGroup}
+# const CPIDivision = Group{CPIAgrupation}
+# const CPIRegion = Group{CPIDivision}
+
+## Build functions to find the inner tree of a given code
+function find_tree(code, tree::Good) 
+    code == tree.code && return tree 
+    nothing
+end
+function find_tree(code, tree::Group)
+    # Most basic case: the code is the same as the tree in which to search 
+    code == tree.code && return tree
+
+    # Search in the tree's nodes 
+    for child in tree.children
+        # If code searched is one of the children, return the child
+        code == child.code && return child
+
+        # Look if the code starts the same as the child's code, i.e the code
+        # contains the child's code. If so, find in the inner tree and break out
+        # of this level's search
+        contains(code, child.code) && return find_subtree(code, child)
+    end
+
+    # Code not found at any level
+    nothing
+end
+
+find_tree("_0111101", cpi_10_tree)
+
+
+## Now build a function to compute any code's price index from the lower level data
+
+# For completeness
+function compute_index(good::Good, base::FullCPIBase)
+    i = findfirst(==(good.code), base.codes)
+    base.ipc[:, i]
+end
+
+# Recursive function to compute inner price indexes for groups
+function compute_index(group, base::FullCPIBase)
+    # Get the indexes of the children 
+    # At the lower level the dispatch will select compute_index(::Good, ::FullCPIBase) to return the Goods indices
+    ipcs = mapreduce(c -> compute_index(c, base), hcat, group.children)
+
+    # If there exists only one good in the group, that is the group's index
+    size(ipcs, 2) == 1 && return ipcs
+    
+    # Get the weights
+    weights = map(c -> c.weight, group.children) 
+
+    # Normalize to 1 and return sum product 
+    ipcs * weights / sum(weights)
+end
+
+node = find_tree("_01", cpi_10_tree)
+compute_index(node, FGT10)
+
+node = find_tree("_0", cpi_10_tree)
+compute_index(node, FGT10)
+
+
+
+node = find_tree("_01", cpi_00_tree)
+compute_index(node, FGT00)
+
+node = find_tree("_0", cpi_00_tree)
+compute_index(node, FGT00)
