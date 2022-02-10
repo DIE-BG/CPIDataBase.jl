@@ -3,22 +3,25 @@ using CSV, DataFrames
 using AbstractTrees
 import AbstractTrees: children, printnode
 
-struct Item
+abstract type AbstractNode{T<:AbstractFloat} end 
+
+struct Item{T} <: AbstractNode{T}
     code::String
     name::String
-    weight::Union{Float32, Float64}
+    weight::T
 end
 
-struct Group{S}
+struct Group{S,T} <: AbstractNode{T}
     code::String
     name::String
-    weight::Union{Float32, Float64}
+    weight::T
     children::Vector{S}
 
     function Group(code, name, children...)
         sum_weights = sum(child.weight for child in children)
+        T = eltype(sum_weights)
         S = eltype(children)
-        new{S}(code, name, sum_weights, S[children...])
+        new{S,T}(code, name, sum_weights, S[children...])
     end
     Group(code, name, children::Vector{S}) where {S} = Group(code, name, children...)
 end
@@ -31,8 +34,6 @@ printnode(io::IO, g::Group) = print(io, g.code * ": " * g.name * " [" * string(g
 
 function Base.show(io::IO, g::Group)
     println(io, typeof(g)) 
-    # Show by default only the first depth level of the tree
-    # print_tree(io, g, maxdepth=1)
     print_tree(io, g)
 end
 
@@ -187,6 +188,11 @@ function find_tree(code, tree::Group)
     nothing
 end
 
+find_tree("_0", cpi_10_tree)
+find_tree("_01", cpi_10_tree)
+find_tree("_011", cpi_10_tree)
+find_tree("_0111", cpi_10_tree)
+find_tree("_01111", cpi_10_tree)
 find_tree("_0111101", cpi_10_tree)
 
 
@@ -225,6 +231,9 @@ compute_index(node, FGT00)
 
 node = find_tree("_0", cpi_00_tree)
 compute_index(node, FGT00)
+
+# Redefine getindex to search for specific nodes within the tree
+Base.getindex(tree::Group, code::AbstractString) = find_tree(code, tree)
 
 
 
