@@ -180,7 +180,7 @@ function find_tree(code, tree::Group)
         # Look if the code starts the same as the child's code, i.e the code
         # contains the child's code. If so, find in the inner tree and break out
         # of this level's search
-        contains(code, child.code) && return find_subtree(code, child)
+        contains(code, child.code) && return find_tree(code, child)
     end
 
     # Code not found at any level
@@ -200,8 +200,8 @@ end
 
 # Recursive function to compute inner price indexes for groups
 function compute_index(group, base::FullCPIBase)
-    # Get the indexes of the children 
-    # At the lower level the dispatch will select compute_index(::Good, ::FullCPIBase) to return the Goods indices
+    # Get the indexes of the children. At the lowest level the dispatch will
+    # select compute_index(::Good, ::FullCPIBase) to return the Goods indices
     ipcs = mapreduce(c -> compute_index(c, base), hcat, group.children)
 
     # If there exists only one good in the group, that is the group's index
@@ -210,7 +210,7 @@ function compute_index(group, base::FullCPIBase)
     # Get the weights
     weights = map(c -> c.weight, group.children) 
 
-    # Normalize to 1 and return sum product 
+    # Return normalized sum product 
     ipcs * weights / sum(weights)
 end
 
@@ -220,10 +220,57 @@ compute_index(node, FGT10)
 node = find_tree("_0", cpi_10_tree)
 compute_index(node, FGT10)
 
-
-
 node = find_tree("_01", cpi_00_tree)
 compute_index(node, FGT00)
 
 node = find_tree("_0", cpi_00_tree)
 compute_index(node, FGT00)
+
+
+
+## Try to cache results a little. 
+# This could be mainly needed in the dashboard
+
+d = Dict(
+    "_0" => compute_index(find_tree("_0", cpi_00_tree), FGT00),
+    "_01" => compute_index(find_tree("_01", cpi_00_tree), FGT00),
+)
+
+
+function compute_index!(cache, good::Good, base::FullCPIBase)
+    i = findfirst(==(good.code), base.codes)
+    cache[good.code] = base.ipc[:, i] # save a copy in the cache
+    cache[good.code]
+end
+
+function compute_index!(cache, group, base::FullCPIBase)
+    # If code is available in cache, just return it
+    group.code in keys(cache) && return cache[group.code]
+
+    # Else, compute the index and store it 
+    # Get the indexes of the children. At the lowest level the dispatch will
+    # select compute_index(::Good, ::FullCPIBase) to return the Goods indices
+    ipcs = mapreduce(c -> compute_index!(cache, c, base), hcat, group.children)
+
+    # If there exists only one good in the group, that is the group's index
+    if size(ipcs, 2) == 1 
+        cache[group.code] = ipcs 
+        return ipcs
+    end
+    
+    # Get the weights
+    weights = map(c -> c.weight, group.children) 
+
+    # Store normalized sum product 
+    cache[group.code] = ipcs * weights / sum(weights)
+    cache[group.code]
+end
+
+d = Dict{String, Vector{Float32}}()
+d = Dict()
+
+node = find_tree("_01", cpi_10_tree)
+compute_index!(d, node, FGT10)
+
+# And we have all that is needed in d, for example 
+DataFrame(d)
