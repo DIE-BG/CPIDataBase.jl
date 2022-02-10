@@ -3,7 +3,7 @@ using CSV, DataFrames
 using AbstractTrees
 import AbstractTrees: children, printnode
 
-struct Good
+struct Item
     code::String
     name::String
     weight::Union{Float32, Float64}
@@ -23,10 +23,10 @@ struct Group{S}
     Group(code, name, children::Vector{S}) where {S} = Group(code, name, children...)
 end
 
-children(::Good) = ()
+children(::Item) = ()
 children(g::Group) = g.children
 
-printnode(io::IO, g::Good) = print(io, g.code * ": " * g.name * " [" * string(g.weight) * "] ")
+printnode(io::IO, g::Item) = print(io, g.code * ": " * g.name * " [" * string(g.weight) * "] ")
 printnode(io::IO, g::Group) = print(io, g.code * ": " * g.name * " [" * string(g.weight) * "] ")
 
 function Base.show(io::IO, g::Group)
@@ -36,15 +36,15 @@ function Base.show(io::IO, g::Group)
     print_tree(io, g)
 end
 
-g1 = Good(FGT10.codes[1], FGT10.names[1], FGT10.w[1])
-g2 = Good(FGT10.codes[2], FGT10.names[2], FGT10.w[2])
+g1 = Item(FGT10.codes[1], FGT10.names[1], FGT10.w[1])
+g2 = Item(FGT10.codes[2], FGT10.names[2], FGT10.w[2])
 
 gr1 = Group("_01", "Alimentos y bebidas no alcohólicas", [g1, g2])
 gr1 = Group("_01", "Alimentos y bebidas no alcohólicas", g1, g2)
 
 print_tree(gr1)
 
-foods = [Good(FGT10.codes[i], FGT10.names[i], FGT10.w[i]) for i in 1:74]
+foods = [Item(FGT10.codes[i], FGT10.names[i], FGT10.w[i]) for i in 1:74]
 foodiv = Group("_01", "Alimentos y bebidas no alcohólicas", foods)
 print_tree(foodiv)
 
@@ -73,7 +73,7 @@ function cpi_tree_nodes(codes::Vector{<:AbstractString};
         children = map(available) do code
             # Find the code index 
             icode = findfirst(==(code), codes)
-            Good(code, full_base.names[icode], full_base.w[icode])
+            Item(code, full_base.names[icode], full_base.w[icode])
         end
         return children
     end
@@ -157,14 +157,14 @@ print_tree(cpi_00_tree)
 
 ## Alias for the CPI 2010 base (don't work for the 2000 base)
 
-# const CPISubgroup = Group{Good}
+# const CPISubgroup = Group{Item}
 # const CPIGroup = Group{CPISubgroup}
 # const CPIAgrupation = Group{CPIGroup}
 # const CPIDivision = Group{CPIAgrupation}
 # const CPIRegion = Group{CPIDivision}
 
 ## Build functions to find the inner tree of a given code
-function find_tree(code, tree::Good) 
+function find_tree(code, tree::Item) 
     code == tree.code && return tree 
     nothing
 end
@@ -192,8 +192,8 @@ find_tree("_0111101", cpi_10_tree)
 
 ## Now build a function to compute any code's price index from the lower level data
 
-# For completeness
-function compute_index(good::Good, base::FullCPIBase)
+# Basic case: compute index of an Item, which is stored in the `base` structure
+function compute_index(good::Item, base::FullCPIBase)
     i = findfirst(==(good.code), base.codes)
     base.ipc[:, i]
 end
@@ -201,7 +201,7 @@ end
 # Recursive function to compute inner price indexes for groups
 function compute_index(group, base::FullCPIBase)
     # Get the indexes of the children. At the lowest level the dispatch will
-    # select compute_index(::Good, ::FullCPIBase) to return the Goods indices
+    # select compute_index(::Item, ::FullCPIBase) to return the Goods indices
     ipcs = mapreduce(c -> compute_index(c, base), hcat, group.children)
 
     # If there exists only one good in the group, that is the group's index
@@ -231,13 +231,7 @@ compute_index(node, FGT00)
 ## Try to cache results a little. 
 # This could be mainly needed in the dashboard
 
-d = Dict(
-    "_0" => compute_index(find_tree("_0", cpi_00_tree), FGT00),
-    "_01" => compute_index(find_tree("_01", cpi_00_tree), FGT00),
-)
-
-
-function compute_index!(cache, good::Good, base::FullCPIBase)
+function compute_index!(cache, good::Item, base::FullCPIBase)
     i = findfirst(==(good.code), base.codes)
     cache[good.code] = base.ipc[:, i] # save a copy in the cache
     cache[good.code]
@@ -249,7 +243,7 @@ function compute_index!(cache, group, base::FullCPIBase)
 
     # Else, compute the index and store it 
     # Get the indexes of the children. At the lowest level the dispatch will
-    # select compute_index(::Good, ::FullCPIBase) to return the Goods indices
+    # select compute_index(::Item, ::FullCPIBase) to return the Goods indices
     ipcs = mapreduce(c -> compute_index!(cache, c, base), hcat, group.children)
 
     # If there exists only one good in the group, that is the group's index
@@ -267,7 +261,6 @@ function compute_index!(cache, group, base::FullCPIBase)
 end
 
 d = Dict{String, Vector{Float32}}()
-d = Dict()
 
 node = find_tree("_01", cpi_10_tree)
 compute_index!(d, node, FGT10)
