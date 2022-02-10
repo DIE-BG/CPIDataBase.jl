@@ -1,278 +1,102 @@
-using CPIDataGT
-using CSV, DataFrames
-using AbstractTrees
-import AbstractTrees: children, printnode
+# Tests for tree structures
 
-abstract type AbstractNode{T<:AbstractFloat} end 
+@testset "Tree structures" begin 
 
-struct Item{T} <: AbstractNode{T}
-    code::String
-    name::String
-    weight::T
-end
+    ## Build a test FullCPIBase
+    varbase = getzerobase(
+        T_type = Float32, 
+        G = 10, 
+        T_periods = 10, 
+        startdate = Date(2001, 1)
+    )
 
-struct Group{S,T} <: AbstractNode{T}
-    code::String
-    name::String
-    weight::T
-    children::Vector{S}
+    # Codes with characters hierarchy defined by sequence (3, 4, 5, 7) 
+    # Try several combinations
+    codes = [
+        "_011101", # One division, single subgroup, single item
+        "_011201", # More items per subgroup
+        "_011202",
+        "_021101", # Higher groups with only one Item
+        "_022101",
+        "_031101", # One division with single Item 
+        "_041101", # One division, one agrupation, several sub-agrupations and items
+        "_041201",
+        "_041202",
+        "_041301",
+    ]
 
-    function Group(code, name, children...)
-        sum_weights = sum(child.weight for child in children)
-        T = eltype(sum_weights)
-        S = eltype(children)
-        new{S,T}(code, name, sum_weights, S[children...])
-    end
-    Group(code, name, children::Vector{S}) where {S} = Group(code, name, children...)
-end
+    # Map some individual names for the Item objects
+    names = string.('A':'J')
 
-children(::Item) = ()
-children(g::Group) = g.children
+    # Create some group_codes
+    group_codes = [
+        "_01",
+        "_02",
+        "_03",
+        "_04",
+        "_011",
+        "_021",
+        "_022",
+        "_031",
+        "_041",
+        "_0111",
+        "_0112",
+        "_0211",
+        "_0221",
+        "_0311",
+        "_0411",
+        "_0412",
+        "_0413",
+    ]
 
-printnode(io::IO, g::Item) = print(io, g.code * ": " * g.name * " [" * string(g.weight) * "] ")
-printnode(io::IO, g::Group) = print(io, g.code * ": " * g.name * " [" * string(g.weight) * "] ")
-
-function Base.show(io::IO, g::Group)
-    println(io, typeof(g)) 
-    print_tree(io, g)
-end
-
-g1 = Item(FGT10.codes[1], FGT10.names[1], FGT10.w[1])
-g2 = Item(FGT10.codes[2], FGT10.names[2], FGT10.w[2])
-
-gr1 = Group("_01", "Alimentos y bebidas no alcohólicas", [g1, g2])
-gr1 = Group("_01", "Alimentos y bebidas no alcohólicas", g1, g2)
-
-print_tree(gr1)
-
-foods = [Item(FGT10.codes[i], FGT10.names[i], FGT10.w[i]) for i in 1:74]
-foodiv = Group("_01", "Alimentos y bebidas no alcohólicas", foods)
-print_tree(foodiv)
-
-
-## CPI tree functions 
-
-# Construye y devuelve una lista de nodos a partir de la lista de códigos
-# `codes` u de la especificación jerárquica de caracteres en `characters`. Los
-# nombres y las ponderaciones del nivel inferior (nivel de gasto básico) son
-# obtenidas de la estructura `full_base`. Se debe proveer el vector de códigos y
-# nombres de todas las jerarquías superiores en la estructura de códigos en los
-# vectores `group_names` y `group_codes`.
-function cpi_tree_nodes(codes::Vector{<:AbstractString}; 
-    characters::(NTuple{N, Int} where N), depth::Int=1, chars::Int=characters[depth], prefix::AbstractString="", 
-    full_base::FullCPIBase, 
-    group_names::Vector{<:AbstractString}, 
-    group_codes::Vector{<:AbstractString})
-    
-    # Get available starting codes 
-    available = filter(code -> startswith(code, prefix), codes)
-    
-    # Base case: 
-    # If code length is the last available then we reached a leaf node
-    if chars == last(characters)
-        # With available codes construct leaf CPI nodes
-        children = map(available) do code
-            # Find the code index 
-            icode = findfirst(==(code), codes)
-            Item(code, full_base.names[icode], full_base.w[icode])
-        end
-        return children
+    # Map generic group codes according to length
+    group_names = map(group_codes) do code 
+        l = length(code)
+        l == 3 && return "Div." * code
+        l == 4 && return "Agr." * code
+        l == 5 && return "Subgr." * code
+        return "Gen." * code
     end
 
-    # Get possible prefixes values from the available list. Possible prefixes
-    # are the ones from the beginning of the string to the number of chars,
-    # which depends on the depth we are on.
-    possibles = unique(getindex.(available, Ref(1:chars)))
+    base = FullCPIBase(
+        capitalize(varbase.v), 
+        varbase.v, 
+        varbase.w, 
+        varbase.dates, 
+        varbase.baseindex, 
+        codes, 
+        names
+    )
 
-    # For each available code, call the function itself with the next downward hierarchy
-    groups = map(possibles) do prefixcode
-        # Go get the children in the next downward level
-        children = cpi_tree_nodes(codes; characters, depth=depth+1, prefix=prefixcode,
-            full_base, group_names, group_codes
-        )
-        # Get the group name 
-        gcode = findfirst(==(prefixcode), group_codes)
-        gname = group_names[gcode]
-        # With the children create a group 
-        group = Group(prefixcode, gname, children)
-        group
-    end
 
-    # Return the group for the upward parents
-    return groups
+    ## Build items and groups manually
+    all_items = [Item(base.codes[i], base.names[i], base.w[i]) for i in 1:10]
+    group = Group("_0", "Single group", all_items)
+    @info "Test building items and groups manually" 
+    print_tree(group)
+
+    @test length(children(group)) == 10
+    @test abs(sum(c.weight for c in children(group)) - 100) <= 1e-2
+
+
+    ## Try recursively building the tree
+    @info "Test recursively building the CPI tree"
+    cpi_test_tree = get_cpi_tree(
+        full_base = base, 
+        group_names = group_names, 
+        group_codes = group_codes, 
+        characters = (3, 4, 5, 7)
+    )
+    print_tree(cpi_test_tree)
+
+    @test cpi_test_tree["_0"] === cpi_test_tree # returns the same structure
+    @test cpi_test_tree["_01"] isa Group
+    @test length(children(cpi_test_tree)) == 4
+    @test abs(cpi_test_tree.weight - 100) < 1e-2
+
+    ## Add more tests to check the computations of compute_index
+    # to do
+
+
+    ## Add tests to check compute_index!
 end
-
-# Función superior para obtener estructura jerárquica del IPC. Devuelve el nodo
-# superior del árbol jerárquico. Utiliza la función de más bajo nivel
-# `cpi_tree_nodes` para construir los nodos del nivel más alto y hacia abajo en
-# la estructura jerárquica. Se debe proveer el vector de códigos y nombres de
-# todas las jerarquías superiores en la estructura de códigos en los vectores
-# `group_names` y `group_codes`. 
-function get_cpi_tree(; 
-    full_base::FullCPIBase, 
-    group_names::Vector{<:AbstractString}, group_codes::Vector{<:AbstractString}, 
-    characters::(NTuple{N, Int} where N),
-    upperlevel_code = "_0", 
-    upperlevel_name = "IPC")
-
-    # Get the codes list from the FullCPIBase object
-    codes = full_base.codes
-
-    # Call lower level tree building function
-    upper_nodes = cpi_tree_nodes(codes; characters, full_base, group_names, group_codes)
-    
-    # Build upper level tree node
-    tree = Group(upperlevel_code, upperlevel_name, upper_nodes)
-    tree
-end
-
-
-
-
-## Building CPI Base 2010 tree
-
-groups10 = CSV.read(joinpath(pkgdir(CPIDataGT), "data", "Guatemala_IPC_2010_Groups.csv"), DataFrame)
-
-cpi_10_tree = get_cpi_tree(
-    full_base = FGT10, 
-    group_names = groups10[!, :GroupName], 
-    group_codes = groups10[!, :Code],
-    characters = (3,4,5,6,8) #(3, 8) #(3,4,5,6,8) 
-)
-
-cpi_10_tree
-print_tree(cpi_10_tree)
-
-## Building CPI Base 2000 tree
-groups00 = CSV.read(joinpath(pkgdir(CPIDataGT), "data", "Guatemala_IPC_2000_Groups.csv"), DataFrame)
-
-cpi_00_tree = get_cpi_tree(
-    full_base = FGT00, 
-    group_names = groups00[!, :GroupName], 
-    group_codes = groups00[!, :Code],
-    characters = (3, 7)
-)
-
-cpi_00_tree
-print_tree(cpi_00_tree)
-
-## Alias for the CPI 2010 base (don't work for the 2000 base)
-
-# const CPISubgroup = Group{Item}
-# const CPIGroup = Group{CPISubgroup}
-# const CPIAgrupation = Group{CPIGroup}
-# const CPIDivision = Group{CPIAgrupation}
-# const CPIRegion = Group{CPIDivision}
-
-## Build functions to find the inner tree of a given code
-function find_tree(code, tree::Item) 
-    code == tree.code && return tree 
-    nothing
-end
-function find_tree(code, tree::Group)
-    # Most basic case: the code is the same as the tree in which to search 
-    code == tree.code && return tree
-
-    # Search in the tree's nodes 
-    for child in tree.children
-        # If code searched is one of the children, return the child
-        code == child.code && return child
-
-        # Look if the code starts the same as the child's code, i.e the code
-        # contains the child's code. If so, find in the inner tree and break out
-        # of this level's search
-        contains(code, child.code) && return find_tree(code, child)
-    end
-
-    # Code not found at any level
-    nothing
-end
-
-find_tree("_0", cpi_10_tree)
-find_tree("_01", cpi_10_tree)
-find_tree("_011", cpi_10_tree)
-find_tree("_0111", cpi_10_tree)
-find_tree("_01111", cpi_10_tree)
-find_tree("_0111101", cpi_10_tree)
-
-
-## Now build a function to compute any code's price index from the lower level data
-
-# Basic case: compute index of an Item, which is stored in the `base` structure
-function compute_index(good::Item, base::FullCPIBase)
-    i = findfirst(==(good.code), base.codes)
-    base.ipc[:, i]
-end
-
-# Recursive function to compute inner price indexes for groups
-function compute_index(group, base::FullCPIBase)
-    # Get the indexes of the children. At the lowest level the dispatch will
-    # select compute_index(::Item, ::FullCPIBase) to return the Goods indices
-    ipcs = mapreduce(c -> compute_index(c, base), hcat, group.children)
-
-    # If there exists only one good in the group, that is the group's index
-    size(ipcs, 2) == 1 && return ipcs
-    
-    # Get the weights
-    weights = map(c -> c.weight, group.children) 
-
-    # Return normalized sum product 
-    ipcs * weights / sum(weights)
-end
-
-node = find_tree("_01", cpi_10_tree)
-compute_index(node, FGT10)
-
-node = find_tree("_0", cpi_10_tree)
-compute_index(node, FGT10)
-
-node = find_tree("_01", cpi_00_tree)
-compute_index(node, FGT00)
-
-node = find_tree("_0", cpi_00_tree)
-compute_index(node, FGT00)
-
-# Redefine getindex to search for specific nodes within the tree
-Base.getindex(tree::Group, code::AbstractString) = find_tree(code, tree)
-
-
-
-## Try to cache results a little. 
-# This could be mainly needed in the dashboard
-
-function compute_index!(cache, good::Item, base::FullCPIBase)
-    i = findfirst(==(good.code), base.codes)
-    cache[good.code] = base.ipc[:, i] # save a copy in the cache
-    cache[good.code]
-end
-
-function compute_index!(cache, group, base::FullCPIBase)
-    # If code is available in cache, just return it
-    group.code in keys(cache) && return cache[group.code]
-
-    # Else, compute the index and store it 
-    # Get the indexes of the children. At the lowest level the dispatch will
-    # select compute_index(::Item, ::FullCPIBase) to return the Goods indices
-    ipcs = mapreduce(c -> compute_index!(cache, c, base), hcat, group.children)
-
-    # If there exists only one good in the group, that is the group's index
-    if size(ipcs, 2) == 1 
-        cache[group.code] = ipcs 
-        return ipcs
-    end
-    
-    # Get the weights
-    weights = map(c -> c.weight, group.children) 
-
-    # Store normalized sum product 
-    cache[group.code] = ipcs * weights / sum(weights)
-    cache[group.code]
-end
-
-d = Dict{String, Vector{Float32}}()
-
-node = find_tree("_01", cpi_10_tree)
-compute_index!(d, node, FGT10)
-
-# And we have all that is needed in d, for example 
-DataFrame(d)
