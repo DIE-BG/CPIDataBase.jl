@@ -83,11 +83,9 @@ module CPIDataBase
     module TestHelpers
         using Dates, ..CPIDataBase    
         
-        export getrandomweights, 
-            getbasedates, 
-            getzerobase, 
-            getrandombase,
-            getzerocountryst
+        export getrandomweights, getbasedates
+        export getzerobase, getrandombase
+        export getzerocountryst, getrandomcountryst
 
         include("helpers/test_helpers.jl")
     end
