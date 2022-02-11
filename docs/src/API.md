@@ -4,6 +4,10 @@ CurrentModule = CPIDataBase
 
 # API
 
+```@docs
+CPIDataBase
+```
+
 ## Tipos `CPIBase`
 
 ```@index
