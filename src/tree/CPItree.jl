@@ -87,9 +87,13 @@ function cpi_tree_nodes(codes::Vector{<:AbstractString};
         )
         # Get the group name 
         @debug "Prefix code:" prefixcode
-        gcode = findfirst(==(prefixcode), group_codes)
-        gcode === nothing && throw(ArgumentError("Código de grupo no encontrado en `group_codes`"))
-        gname = group_names[gcode]
+        i = findfirst(==(prefixcode), group_codes)
+        if i === nothing 
+            @warn "Código de grupo para $(prefixcode) no encontrado en `group_codes`. Utilizando nombre genérico."
+            gname = "Group: $prefixcode"
+        else
+            gname = group_names[i]
+        end
         # With the children create a group 
         group = Group(prefixcode, gname, children)
         group
@@ -186,6 +190,13 @@ function compute_index(group, base::FullCPIBase)
     ipcs * weights / sum(weights)
 end
 
+# Edge case called when searching for a node that doest not exist. For example,
+# if called compute_index(tree["_0101101"], base) and node with code "_0101101"
+# does not exist, returns nothing and raises a warning
+function compute_index(::Nothing, ::FullCPIBase)
+    @warn "Nodo no disponible en la estructura"
+    nothing 
+end
 
 
 ##  ----------------------------------------------------------------------------
@@ -219,4 +230,9 @@ function compute_index!(cache::Dict, group::Group, base::FullCPIBase)
     # Store normalized sum product 
     cache[group.code] = ipcs * weights / sum(weights)
     cache[group.code]
+end
+
+function compute_index!(::Dict, ::Nothing, ::FullCPIBase)
+    @warn "Nodo no disponible en la estructura"
+    nothing 
 end
