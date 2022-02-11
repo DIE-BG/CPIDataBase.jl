@@ -15,8 +15,9 @@ makedocs(;
     ),
     # format=Documenter.LaTeX(), 
     pages=[
-        "Home" => "index.md",
+        "Inicio" => "index.md",
         "API" => "API.md",
+        "TestHelpers API" => "TestHelpers.md",
     ],
 )
 
