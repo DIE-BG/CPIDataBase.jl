@@ -70,6 +70,9 @@ module CPIDataBase
     export find_tree, compute_index, compute_index!
     export children, print_tree  # reexport from AbstractTrees
 
+    # Estructura envolvente CPITree de FullCPIBase y estructura anidada Group
+    export CPITree
+
     include("tree/CPItree.jl")
 
 

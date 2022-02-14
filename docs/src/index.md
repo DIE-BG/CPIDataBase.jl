@@ -9,7 +9,7 @@ Este paquete provee estructuras de datos y operaciones básicas para el análisi
 
 ## Estructura de datos del IPC
 
-La estructura principal de datos es un contenedor de tipo [`CountryStructure`](@ref). Supongamos que los datos del IPC de un país se encuentran disponibles en la constante `countrydata`: 
+La estructura principal de datos es un contenedor de tipo [`CountryStructure`](@ref). Supongamos que los datos del IPC de un país ficticio, llamado Macronia, se encuentran disponibles en la constante `countrydata`: 
 
 ```@setup showcase-package
 using CPIDataBase
@@ -19,10 +19,12 @@ countrydata = getrandomcountryst()
 
 ```@example showcase-package
 using CPIDataBase
+# Cargar o construir countrydata
+# (...)
 countrydata
 ```
 
-Este contenedor posee los datos del IPC de Macronia, de las últimas dos décadas. Está dividido en dos estructuras de datos denominadas [`VarCPIBase`](@ref). Cada estructura contiene las variaciones intermensuales de los números índices de precios de los gastos básicos individuales del IPC de Macronia. A su vez, el IPC de Macronia está dividido históricamente en dos bases del IPC, cada una conlleva una  metodología diferente, con diferentes gastos básicos y ponderaciones en la canasta de consumo: 
+Este contenedor posee los datos del IPC de Macronia de las últimas dos décadas. Está dividido en dos estructuras de datos denominadas [`VarCPIBase`](@ref). Cada estructura contiene las variaciones intermensuales de los números índices de precios de los gastos básicos individuales del IPC de Macronia. A su vez, el IPC de Macronia está dividido históricamente en dos bases del IPC, cada una conlleva una  metodología diferente, con diferentes gastos básicos y ponderaciones en la canasta de consumo: 
 
 Por ejemplo, estos son los datos históricos de Macronia en la década del 2000: 
 ```@example showcase-package

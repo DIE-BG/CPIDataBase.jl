@@ -91,7 +91,7 @@
     ## Try recursively building the tree
     @info "Test recursively building the CPI tree"
     cpi_test_tree = get_cpi_tree(
-        full_base = base, 
+        base = base, 
         group_names = group_names, 
         group_codes = group_codes, 
         characters = (3, 4, 5, 7)
@@ -148,4 +148,23 @@
 
     @info "Test producing a warning for node not found"
     @test compute_index(cpi_test_tree["_011102"], base) === nothing 
+
+    ## Test CPITree wrapper type
+    @info "Tests with CPITree wrapper type"
+    cpi_wrapper = CPITree(base, cpi_test_tree, group_names, group_codes)
+
+    # Test indexing the top level code returns the same object
+    @test cpi_wrapper["_0"] === cpi_wrapper
+
+    # Test under-the-hood call to compute_index
+    @test all(compute_index(cpi_wrapper, "_0") .== compute_index(cpi_test_tree["_0"], base))
+
+    # Test computing an index not available
+    @test compute_index(cpi_wrapper, "_011102") === nothing
+    # Test indexing returns a proper CPITree
+    @test hasproperty(cpi_wrapper["_01"], :group_names)
+    @test hasproperty(cpi_wrapper["_01"], :group_codes)
+    
+    # Compute index with one argument
+    @test all(compute_index(cpi_wrapper["_01"]) .== compute_index(cpi_wrapper, "_01"))
 end
