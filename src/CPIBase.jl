@@ -41,7 +41,8 @@ const CODETYPE = Union{Vector{String}, Nothing}
 
     FullCPIBase(ipc::Matrix{T}, v::Matrix{T}, w::Vector{T}, dates::DATETYPE, baseindex::B, codes::CODETYPE, names::DESCTYPE) where {T, B}
     
-Contenedor completo para datos del IPC de un país. Se representa por:
+Contenedor completo para datos desagregados del IPC de un país. Se representa
+por:
 - Matriz de índices de precios `ipc` que incluye la fila con los índices del
   número base. 
 - Matriz de variaciones intermensuales `v`. En las filas contiene los períodos y

@@ -54,7 +54,28 @@ module CPIDataBase
     export getdates
     include("utils/utils.jl")
 
-    
+    ##  ------------------------------------------------------------------------
+    #   Funcionalidades de árboles de cómputo del IPC
+    #   ------------------------------------------------------------------------
+    using AbstractTrees
+    import AbstractTrees: children, printnode
+    # Tipos básicos, un gasto básico y una estructura de grupo
+    export Item, Group 
+    # Funciones para construir a partir de estructura de códigos
+    export get_cpi_tree, cpi_tree_nodes 
+    # Operaciones básicas: 
+    # find_tree : Encontrar un nodo en el árbol con un código especificado
+    # compute_index : Computar el índice de cualquier nodo en el árbol con la fórmula del IPC
+    # compute_index! : Similar a compute_index pero utiliza una caché de diccionario
+    export find_tree, compute_index, compute_index!
+    export children, print_tree  # reexport from AbstractTrees
+
+    # Estructura envolvente CPITree de FullCPIBase y estructura anidada Group
+    export CPITree
+
+    include("tree/CPItree.jl")
+
+
     ##  ------------------------------------------------------------------------
     #   Submódulo de pruebas
     #   ------------------------------------------------------------------------
@@ -65,11 +86,9 @@ module CPIDataBase
     module TestHelpers
         using Dates, ..CPIDataBase    
         
-        export getrandomweights, 
-            getbasedates, 
-            getzerobase, 
-            getrandombase,
-            getzerocountryst
+        export getrandomweights, getbasedates
+        export getzerobase, getrandombase
+        export getzerocountryst, getrandomcountryst
 
         include("helpers/test_helpers.jl")
     end

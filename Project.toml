@@ -1,9 +1,10 @@
 name = "CPIDataBase"
 uuid = "bc2aee9a-d1f8-4cce-8750-9c1afc923989"
 authors = ["Rodrigo Chang and DIE-BG collaborators"]
-version = "0.5.0"
+version = "0.6.2"
 
 [deps]
+AbstractTrees = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 PrettyTables = "08abe8d2-0d0c-5749-adfa-8a2ac140af0d"
