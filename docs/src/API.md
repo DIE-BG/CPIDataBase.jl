@@ -55,15 +55,3 @@ Pages = ["capitalize.jl", "varinterm.jl", "varinteran.jl", "utils.jl"]
 Modules = [CPIDataBase]
 Pages = ["capitalize.jl", "varinterm.jl", "varinteran.jl", "utils.jl"]
 ```
-
-## Operaciones de la estructura jerárquica del IPC
-
-```@index
-Modules = [CPIDataBase]
-Pages = ["CPItree.jl"]
-```
-
-```@autodocs
-Modules = [CPIDataBase]
-Pages = ["CPItree.jl"]
-```

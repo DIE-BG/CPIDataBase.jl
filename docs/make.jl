@@ -15,7 +15,8 @@ makedocs(;
     ),
     # format=Documenter.LaTeX(), 
     pages=[
-        "Inicio" => "index.md",
+        "Introducción" => "index.md",
+        "Estructura jerárquica del IPC" => "CPITrees.md",
         "API" => "API.md",
         "TestHelpers API" => "TestHelpers.md",
     ],

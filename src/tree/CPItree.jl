@@ -427,6 +427,41 @@ DataFrame `groupsdf` puede verse de esta forma:
   16 │ _0412   Subgr._0412
   17 │ _0413   Subgr._0413
 ```
+
+Por ejemplo, al construir un `CPITree` con la estructura de códigos indicada anteriormente y el DataFrame de ejemplo, el árbol del IPC se puede ver de esta forma: 
+```julia-repl
+julia> tree = CPITree(; base, groupsdf, characters=(3,4,5,7))
+CPITree{Group{Group{Group{Group{Item{Float32}, Float32}, Float32}, Float32}, Float32}} con datos
+└─→ FullCPIBase{Float32, Float32}: 36 períodos × 10 gastos básicos Jan-01-Dec-03
+_0: IPC [100.0]
+├─ _01: Div._01 [21.491905]
+│  └─ _011: Agr._011 [21.491905]
+│     ├─ _0111: Subgr._0111 [7.352945]
+│     │  └─ _011101: Item A [7.352945]
+│     └─ _0112: Subgr._0112 [14.13896]
+│        ├─ _011201: Item B [6.7442417]
+│        └─ _011202: Item C [7.394718]
+├─ _02: Div._02 [3.0530455]
+│  ├─ _021: Agr._021 [1.1036392]
+│  │  └─ _0211: Subgr._0211 [1.1036392]
+│  │     └─ _021101: Item D [1.1036392]
+│  └─ _022: Agr._022 [1.9494063]
+│     └─ _0221: Subgr._0221 [1.9494063]
+│        └─ _022101: Item E [1.9494063]
+├─ _03: Div._03 [11.68543]
+│  └─ _031: Agr._031 [11.68543]
+│     └─ _0311: Subgr._0311 [11.68543]
+│        └─ _031101: Item F [11.68543]
+└─ _04: Div._04 [63.769615]
+   └─ _041: Agr._041 [63.769615]
+      ├─ _0411: Subgr._0411 [16.103952]
+      │  └─ _041101: Item G [16.103952]
+      ├─ _0412: Subgr._0412 [28.824577]
+      │  ├─ _041201: Item H [11.367162]
+      │  └─ _041202: Item I [17.457417]
+      └─ _0413: Subgr._0413 [18.841085]
+         └─ _041301: Item J [18.841085]
+```
 """
 struct CPITree{G}
     base::FullCPIBase
