@@ -6,6 +6,9 @@ using Test
 # Creation of types
 include("create_types.jl")
 
+# InflationCombination
+include("InflationCombination.jl")
+
 # Test some VarCPIBase and CountryStructure operations
 include("operations.jl")
 
