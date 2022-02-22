@@ -4,8 +4,8 @@
 """
     CombinationFunction{N, W} <: EnsembleInflationFunction <: InflationFunction
 
-    CombinationFunction(ensemble, weights [, name])
-    CombinationFunction(inflfn1, inflfn2 [, ...], weights [, name])
+    CombinationFunction(ensemble, weights [, name, tag])
+    CombinationFunction(inflfn1, inflfn2 [, ...], weights [, name, tag])
 
 Función de inflación para computar un promedio ponderado de un conjunto de `N`
 de medidas de inflación con tipo del vector de ponderaciones `W`.
@@ -14,10 +14,11 @@ struct CombinationFunction{N, W} <: EnsembleInflationFunction
     ensemble::EnsembleFunction{N}
     weights::W
     name::Union{Nothing, String}
+    tag::Union{Nothing, String}
 
-    function CombinationFunction(ensemble::EnsembleFunction{N}, weights::W, name) where {N, W}
+    function CombinationFunction(ensemble::EnsembleFunction{N}, weights::W, name=nothing, tag=nothing) where {N, W}
         num_measures(ensemble) == length(weights) || throw(ArgumentError("número de ponderadores debe coincidir con número de medidas"))
-        new{N, W}(ensemble, weights, name)
+        new{N, W}(ensemble, weights, name, tag)
     end
 end
 
@@ -29,9 +30,10 @@ Alias para [`CombinationFunction`](@ref).
 const InflationCombination = CombinationFunction
 
 # Utilidades para construir una CombinationFunction
-CombinationFunction(ensemble, weights) = CombinationFunction(ensemble, weights, nothing)
 function CombinationFunction(args...)
-    if args[end] isa String 
+    if args[end-1] isa String && last(args) isa String 
+        return CombinationFunction(EnsembleFunction(args[1:end-3]), args[end-2], args[end-1], args[end])
+    elseif !(args[end-1] isa String) && last(args) isa String 
         return CombinationFunction(EnsembleFunction(args[1:end-2]), args[end-1], args[end])
     end 
     CombinationFunction(EnsembleFunction(args[1:end-1]), args[end])
@@ -62,6 +64,12 @@ function measure_name(combfn::CombinationFunction;
     "Promedio ponderado de $n metodologías" * wstr
 end
 
+# Etiqueta para una CombinationFunction
+function measure_tag(combfn::CombinationFunction)
+    isnothing(combfn.tag) || return combfn.tag
+    "COMBFN"
+end
+
 # Aplicación sobre (::CountryStructure, ::CPIVarInterm) ajusta los índices y
 # variaciones intermensuales para estar acordes con el promedio de las variaciones
 # interanuales 
@@ -69,7 +77,6 @@ function (combfn::CombinationFunction)(cs::CountryStructure, ::CPIVarInterm)
     cpi_index = combfn(cs, CPIIndex())
     varinterm!(cpi_index, cpi_index) # cpi_index -> v_interm
     cpi_index
-    # varinterm(cpi_index)
 end
 
 function (combfn::CombinationFunction)(cs::CountryStructure, ::CPIIndex)
