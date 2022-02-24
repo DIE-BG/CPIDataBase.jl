@@ -37,9 +37,16 @@ struct MixedCountryStructure{N, T} <: CountryStructure{N, T}
 end
 
 
-# Anotar también como VarCPIBase...
+# Util methods for constructing CountryStructures
 UniformCountryStructure(bases::Vararg{VarCPIBase{T, B}, N}) where {N, T, B} = UniformCountryStructure{N, T, B}(bases)
 MixedCountryStructure(bases::Vararg{VarCPIBase}) = MixedCountryStructure(bases)
+
+# Util methods from FullCPIBase -> CountryStructure
+function UniformCountryStructure(fullbases::Vararg{FullCPIBase{T, B}, N}) where {N, T, B}
+    varbases = map(VarCPIBase, fullbases)
+    UniformCountryStructure{N, T, B}(varbases)
+end
+MixedCountryStructure(fullbases::Vararg{FullCPIBase}) = MixedCountryStructure(map(VarCPIBase, fullbases))
 
 # Resumen y método para mostrar 
 
