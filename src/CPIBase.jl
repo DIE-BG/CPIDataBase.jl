@@ -40,6 +40,7 @@ const CODETYPE = Union{Vector{String}, Nothing}
     FullCPIBase{T, B} <: AbstractCPIBase{T}
 
     FullCPIBase(ipc::Matrix{T}, v::Matrix{T}, w::Vector{T}, dates::DATETYPE, baseindex::B, codes::CODETYPE, names::DESCTYPE) where {T, B}
+    FullCPIBase(df::DataFrame, gb::DataFrame)
     
 Contenedor completo para datos desagregados del IPC de un país. Se representa
 por:
@@ -367,18 +368,12 @@ end
 function show(io::IO, base::FullCPIBase)
     summary(io, base)
     println(io)
-    pretty_table(io, hcat(base.codes, base.names, base.w);
-        show_row_number = true, 
-        alignment = :l,
-        header = ["Code", "Description", "Weight"],
-        crop = :both, 
-        vcrop_mode = :middle,
-    )
     pretty_table(io, base.ipc; 
         row_names = base.dates, 
         show_row_number = true, 
         row_name_column_title = "Dates",
-        header = (base.codes, base.w), 
+        crop_subheader = true, 
+        header = (base.codes, base.names, base.w), 
         crop = :both,
         vcrop_mode = :middle,
         formatters = ft_printf("%0.2f"),
