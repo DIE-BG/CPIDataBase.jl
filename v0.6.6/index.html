@@ -6,91 +6,91 @@ countrydata</code></pre><pre class="documenter-example-output"><code class="nohi
 └─→ VarCPIBase{Float32, Float32}: 120 períodos × 218 gastos básicos Jan-01-Dec-10
 └─→ VarCPIBase{Float32, Float32}: 120 períodos × 279 gastos básicos Jan-11-Dec-20
 </code></pre><p>Este contenedor posee los datos del IPC de Macronia de las últimas dos décadas. Está dividido en dos estructuras de datos denominadas <a href="API/#CPIDataBase.VarCPIBase"><code>VarCPIBase</code></a>. Cada estructura contiene las variaciones intermensuales de los números índices de precios de los gastos básicos individuales del IPC de Macronia. A su vez, el IPC de Macronia está dividido históricamente en dos bases del IPC, cada una conlleva una  metodología diferente, con diferentes gastos básicos y ponderaciones en la canasta de consumo: </p><p>Por ejemplo, estos son los datos históricos de Macronia en la década del 2000: </p><pre><code class="language-julia hljs">countrydata[1]</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">VarCPIBase{Float32, Float32}: 120 períodos × 218 gastos básicos Jan-01-Dec-10
-┌─────┬────────────┬──────────┬──────────┬─────────┬──────────┬───────────┬─────
-│ Row │      Dates │        1 │        2 │       3 │        4 │         5 │    ⋯
-│     │            │ 0.837133 │ 0.827451 │ 0.57211 │ 0.813256 │ 0.0633149 │ 0. ⋯
-├─────┼────────────┼──────────┼──────────┼─────────┼──────────┼───────────┼─────
-│   1 │ 2001-01-01 │   0.3232 │   0.1520 │  0.3465 │   0.2110 │    0.4355 │    ⋯
-│   2 │ 2001-02-01 │   0.2174 │   0.1320 │  0.2168 │   0.1115 │    0.0876 │    ⋯
-│   3 │ 2001-03-01 │   0.4933 │   0.1594 │  0.3451 │   0.3377 │    0.0618 │    ⋯
-│   4 │ 2001-04-01 │   0.4884 │   0.0105 │  0.3906 │   0.0720 │    0.2498 │    ⋯
-│   5 │ 2001-05-01 │   0.4485 │   0.0628 │  0.1576 │   0.2983 │    0.3462 │    ⋯
-│   6 │ 2001-06-01 │   0.2664 │   0.2370 │  0.1918 │   0.4173 │    0.2966 │    ⋯
-│   7 │ 2001-07-01 │   0.1859 │   0.0469 │  0.0492 │   0.0835 │    0.3516 │    ⋯
-│   8 │ 2001-08-01 │   0.0139 │   0.2833 │  0.4295 │   0.3971 │    0.3493 │    ⋯
-│  ⋮  │     ⋮      │    ⋮     │    ⋮     │    ⋮    │    ⋮     │     ⋮     │    ⋱
-│ 114 │ 2010-06-01 │   0.1511 │   0.0113 │  0.2966 │   0.3387 │    0.4885 │    ⋯
-│ 115 │ 2010-07-01 │   0.1677 │   0.0022 │  0.1254 │   0.2430 │    0.2635 │    ⋯
-│ 116 │ 2010-08-01 │   0.1932 │   0.2885 │  0.3447 │   0.2600 │    0.2013 │    ⋯
-│ 117 │ 2010-09-01 │   0.1070 │   0.0906 │  0.4105 │   0.4753 │    0.3077 │    ⋯
-│ 118 │ 2010-10-01 │   0.2101 │   0.1190 │  0.1724 │   0.4635 │    0.1880 │    ⋯
-│ 119 │ 2010-11-01 │   0.3764 │   0.4010 │  0.4200 │   0.3363 │    0.4106 │    ⋯
-│ 120 │ 2010-12-01 │   0.2842 │   0.2761 │  0.2190 │   0.1696 │    0.3924 │    ⋯
-└─────┴────────────┴──────────┴──────────┴─────────┴──────────┴───────────┴─────
+┌─────┬────────────┬──────────┬──────────┬──────────┬──────────┬──────────┬─────
+│ Row │      Dates │        1 │        2 │        3 │        4 │        5 │    ⋯
+│     │            │ 0.619057 │ 0.266435 │ 0.808181 │ 0.127007 │ 0.732474 │ 0. ⋯
+├─────┼────────────┼──────────┼──────────┼──────────┼──────────┼──────────┼─────
+│   1 │ 2001-01-01 │   0.3327 │   0.4788 │   0.3782 │   0.0107 │   0.0996 │  0 ⋯
+│   2 │ 2001-02-01 │   0.2195 │   0.2298 │   0.1229 │   0.3088 │   0.0238 │  0 ⋯
+│   3 │ 2001-03-01 │   0.2275 │   0.0737 │   0.3311 │   0.3656 │   0.0376 │  0 ⋯
+│   4 │ 2001-04-01 │   0.2515 │   0.0448 │   0.4905 │   0.0380 │   0.2333 │  0 ⋯
+│   5 │ 2001-05-01 │   0.1547 │   0.0938 │   0.3370 │   0.1102 │   0.2014 │  0 ⋯
+│   6 │ 2001-06-01 │   0.1113 │   0.0017 │   0.1761 │   0.3023 │   0.0318 │  0 ⋯
+│   7 │ 2001-07-01 │   0.2748 │   0.4942 │   0.1873 │   0.3105 │   0.0263 │  0 ⋯
+│   8 │ 2001-08-01 │   0.3474 │   0.3770 │   0.4434 │   0.3440 │   0.3051 │  0 ⋯
+│  ⋮  │     ⋮      │    ⋮     │    ⋮     │    ⋮     │    ⋮     │    ⋮     │    ⋱
+│ 114 │ 2010-06-01 │   0.0427 │   0.2454 │   0.0455 │   0.1720 │   0.4110 │  0 ⋯
+│ 115 │ 2010-07-01 │   0.1797 │   0.4433 │   0.0621 │   0.1866 │   0.2253 │  0 ⋯
+│ 116 │ 2010-08-01 │   0.2195 │   0.2955 │   0.1009 │   0.1594 │   0.3398 │  0 ⋯
+│ 117 │ 2010-09-01 │   0.1446 │   0.1250 │   0.3536 │   0.4917 │   0.3696 │  0 ⋯
+│ 118 │ 2010-10-01 │   0.4460 │   0.1251 │   0.3976 │   0.2227 │   0.2977 │  0 ⋯
+│ 119 │ 2010-11-01 │   0.3579 │   0.4008 │   0.0584 │   0.0924 │   0.1599 │  0 ⋯
+│ 120 │ 2010-12-01 │   0.0110 │   0.0541 │   0.4938 │   0.2664 │   0.3534 │  0 ⋯
+└─────┴────────────┴──────────┴──────────┴──────────┴──────────┴──────────┴─────
                                                 213 columns and 105 rows omitted
 </code></pre><p>Y estos son los datos históricos de Macronia en la década del 2010: </p><pre><code class="language-julia hljs">countrydata[2]</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">VarCPIBase{Float32, Float32}: 120 períodos × 279 gastos básicos Jan-11-Dec-20
-┌─────┬────────────┬──────────┬──────────┬──────────┬───────────┬──────────┬────
-│ Row │      Dates │        1 │        2 │        3 │         4 │        5 │   ⋯
-│     │            │ 0.546638 │ 0.406413 │ 0.633931 │ 0.0711596 │ 0.701544 │ 0 ⋯
-├─────┼────────────┼──────────┼──────────┼──────────┼───────────┼──────────┼────
-│   1 │ 2011-01-01 │   0.2278 │   0.1357 │   0.2861 │    0.4744 │   0.2995 │   ⋯
-│   2 │ 2011-02-01 │   0.4498 │   0.1009 │   0.2111 │    0.1673 │   0.3276 │   ⋯
-│   3 │ 2011-03-01 │   0.0140 │   0.4343 │   0.2503 │    0.1315 │   0.4328 │   ⋯
-│   4 │ 2011-04-01 │   0.1028 │   0.3751 │   0.4336 │    0.2620 │   0.1337 │   ⋯
-│   5 │ 2011-05-01 │   0.3837 │   0.3802 │   0.3116 │    0.1608 │   0.1500 │   ⋯
-│   6 │ 2011-06-01 │   0.2197 │   0.4096 │   0.2588 │    0.1579 │   0.1489 │   ⋯
-│   7 │ 2011-07-01 │   0.3665 │   0.4494 │   0.4421 │    0.0126 │   0.4951 │   ⋯
-│   8 │ 2011-08-01 │   0.3375 │   0.2208 │   0.2107 │    0.3596 │   0.1598 │   ⋯
-│  ⋮  │     ⋮      │    ⋮     │    ⋮     │    ⋮     │     ⋮     │    ⋮     │   ⋱
-│ 114 │ 2020-06-01 │   0.4163 │   0.3444 │   0.1219 │    0.0041 │   0.3644 │   ⋯
-│ 115 │ 2020-07-01 │   0.2372 │   0.0645 │   0.2004 │    0.4681 │   0.2972 │   ⋯
-│ 116 │ 2020-08-01 │   0.1689 │   0.1055 │   0.1342 │    0.2971 │   0.3715 │   ⋯
-│ 117 │ 2020-09-01 │   0.2588 │   0.4950 │   0.0635 │    0.1280 │   0.2796 │   ⋯
-│ 118 │ 2020-10-01 │   0.1257 │   0.4784 │   0.3880 │    0.4897 │   0.3994 │   ⋯
-│ 119 │ 2020-11-01 │   0.1620 │   0.0223 │   0.1931 │    0.0820 │   0.3437 │   ⋯
-│ 120 │ 2020-12-01 │   0.3243 │   0.3837 │   0.4784 │    0.0512 │   0.4246 │   ⋯
-└─────┴────────────┴──────────┴──────────┴──────────┴───────────┴──────────┴────
+┌─────┬────────────┬──────────┬──────────┬──────────┬──────────┬──────────┬─────
+│ Row │      Dates │        1 │        2 │        3 │        4 │        5 │    ⋯
+│     │            │ 0.243601 │ 0.199865 │ 0.583504 │ 0.646039 │ 0.168635 │ 0. ⋯
+├─────┼────────────┼──────────┼──────────┼──────────┼──────────┼──────────┼─────
+│   1 │ 2011-01-01 │   0.0811 │   0.3405 │   0.1438 │   0.0689 │   0.0495 │    ⋯
+│   2 │ 2011-02-01 │   0.4179 │   0.2984 │   0.3941 │   0.2403 │   0.0707 │    ⋯
+│   3 │ 2011-03-01 │   0.3203 │   0.4818 │   0.1672 │   0.2686 │   0.1542 │    ⋯
+│   4 │ 2011-04-01 │   0.0999 │   0.2349 │   0.1831 │   0.4300 │   0.0867 │    ⋯
+│   5 │ 2011-05-01 │   0.4542 │   0.2815 │   0.1926 │   0.0335 │   0.1098 │    ⋯
+│   6 │ 2011-06-01 │   0.0405 │   0.0535 │   0.1586 │   0.0287 │   0.4597 │    ⋯
+│   7 │ 2011-07-01 │   0.3897 │   0.3788 │   0.3473 │   0.0670 │   0.1372 │    ⋯
+│   8 │ 2011-08-01 │   0.1586 │   0.1594 │   0.3248 │   0.4019 │   0.0919 │    ⋯
+│  ⋮  │     ⋮      │    ⋮     │    ⋮     │    ⋮     │    ⋮     │    ⋮     │    ⋱
+│ 114 │ 2020-06-01 │   0.2189 │   0.4118 │   0.3889 │   0.1770 │   0.3065 │    ⋯
+│ 115 │ 2020-07-01 │   0.1239 │   0.0804 │   0.0746 │   0.4216 │   0.1353 │    ⋯
+│ 116 │ 2020-08-01 │   0.1979 │   0.0277 │   0.1184 │   0.4720 │   0.2668 │    ⋯
+│ 117 │ 2020-09-01 │   0.0384 │   0.3129 │   0.0460 │   0.2988 │   0.3098 │    ⋯
+│ 118 │ 2020-10-01 │   0.1644 │   0.0351 │   0.4564 │   0.0683 │   0.4531 │    ⋯
+│ 119 │ 2020-11-01 │   0.2113 │   0.3290 │   0.4795 │   0.3737 │   0.3222 │    ⋯
+│ 120 │ 2020-12-01 │   0.2355 │   0.1833 │   0.2291 │   0.2895 │   0.0180 │    ⋯
+└─────┴────────────┴──────────┴──────────┴──────────┴──────────┴──────────┴─────
                                                 274 columns and 105 rows omitted
 </code></pre><p>Vea la documentación de <a href="API/#CPIDataBase.FullCPIBase"><code>FullCPIBase</code></a> para conocer cómo crear la estructura de datos del IPC necesaria. Los datos de un <a href="API/#CPIDataBase.FullCPIBase"><code>FullCPIBase</code></a> pueden ser convertidos a un <a href="API/#CPIDataBase.VarCPIBase"><code>VarCPIBase</code></a>. La estructura principal de datos de este paquete es un contenedor de tipo <a href="API/#CPIDataBase.CountryStructure"><code>CountryStructure</code></a>, el cual permite realizar cómputos de diferentes metodologías de inflación. </p><h2 id="Cómputo-del-IPC"><a class="docs-heading-anchor" href="#Cómputo-del-IPC">Cómputo del IPC</a><a id="Cómputo-del-IPC-1"></a><a class="docs-heading-anchor-permalink" href="#Cómputo-del-IPC" title="Permalink"></a></h2><p>Con la estructura <code>countrydata</code> es posible computar el Índice de Precios al Consumidor encadenado automáticamente entre las dos bases del IPC: </p><pre><code class="language-julia hljs">inflfn = InflationTotalCPI()
 inflfn(countrydata, CPIIndex())</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">240-element Vector{Float32}:
- 100.26213
- 100.5059
- 100.74869
- 101.01198
- 101.26451
- 101.51415
- 101.7731
- 102.02004
- 102.27685
- 102.55453
+ 100.24957
+ 100.51336
+ 100.76555
+ 101.02176
+ 101.23664
+ 101.486435
+ 101.741135
+ 102.00192
+ 102.26771
+ 102.49957
    ⋮
- 177.9679
- 178.40086
- 178.83661
- 179.29958
- 179.71304
- 180.15329
- 180.64064
- 181.06383
- 181.509</code></pre><p>En este ejemplo, la variable <code>inflfn</code> denota una &quot;función de inflación&quot;. Utilizando diferentes funciones de inflación podemos computar diferentes medidas de inflación con los datos desagregados del IPC. Por ejemplo, el siguiente código computa la variación interanual del IPC, ampliamente utilizada como una medida de inflación en las economías del mundo: </p><pre><code class="language-julia hljs">inflfn = InflationTotalCPI()
+ 178.37308
+ 178.81143
+ 179.24191
+ 179.67863
+ 180.15521
+ 180.58942
+ 181.0198
+ 181.45638
+ 181.88614</code></pre><p>En este ejemplo, la variable <code>inflfn</code> denota una &quot;función de inflación&quot;. Utilizando diferentes funciones de inflación podemos computar diferentes medidas de inflación con los datos desagregados del IPC. Por ejemplo, el siguiente código computa la variación interanual del IPC, ampliamente utilizada como una medida de inflación en las economías del mundo: </p><pre><code class="language-julia hljs">inflfn = InflationTotalCPI()
 inflfn(countrydata)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">229-element Vector{Float32}:
- 3.079152
- 3.0623555
- 3.057444
- 3.07132
- 3.0259728
- 3.0307412
- 3.0369282
- 3.024733
- 3.0489445
- 3.0241966
+ 3.0129552
+ 3.0195832
+ 3.0117154
+ 3.0116558
+ 3.0093193
+ 3.0507922
+ 3.0646205
+ 3.0634642
+ 3.0606031
+ 3.0513525
  ⋮
- 2.9598594
- 2.9616475
- 2.9491305
- 2.9595375
- 2.9335976
- 2.9362679
- 2.969861
- 2.966845
- 2.9768348</code></pre></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="CPITrees/">Estructura jerárquica del IPC »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.12 on <span class="colophon-date" title="Tuesday 27 December 2022 19:18">Tuesday 27 December 2022</span>. Using Julia version 1.8.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+ 3.0196905
+ 3.0176282
+ 3.0032396
+ 2.987492
+ 3.0168414
+ 3.0057788
+ 2.9813766
+ 2.9770136
+ 2.9892325</code></pre></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="CPITrees/">Estructura jerárquica del IPC »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.12 on <span class="colophon-date" title="Tuesday 27 December 2022 20:03">Tuesday 27 December 2022</span>. Using Julia version 1.8.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
