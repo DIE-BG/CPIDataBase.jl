@@ -22,7 +22,7 @@ module CPIDataBase
 
     # Exportar tipos para implementar nuevas funciones de inflación
     export InflationFunction, EnsembleInflationFunction
-    export EnsembleFunction, CombinationFunction
+    export EnsembleFunction, CombinationFunction, Splice
     export InflationEnsemble, InflationCombination # alias de los 2 anteriores
     export components # componentes de una InflationCombination
     export num_measures, weights, measure_name, measure_tag, params
@@ -46,6 +46,7 @@ module CPIDataBase
     include("inflation/InflationFunction.jl")
     include("inflation/EnsembleFunction.jl")
     include("inflation/CombinationFunction.jl")
+    include("inflation/Splice.jl")
 
     # Medida de inflación básica 
     include("inflation/InflationTotalCPI.jl")
