@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Estructura jerárquica del IPC · CPIDataBase.jl</title><script data-outdated-warner src="../assets/warner.js"></script><link rel="canonical" href="https://die-bg.github.io/CPIDataBase.jl/CPITrees/"/><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.039/juliamono-regular.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.11/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><script src="../../copy.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">CPIDataBase.jl</a></span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Introducción</a></li><li class="is-active"><a class="tocitem" href>Estructura jerárquica del IPC</a><ul class="internal"><li><a class="tocitem" href="#Funciones-de-bajo-nivel"><span>Funciones de bajo nivel</span></a></li></ul></li><li><a class="tocitem" href="../API/">API</a></li><li><a class="tocitem" href="../TestHelpers/">TestHelpers API</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Estructura jerárquica del IPC</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Estructura jerárquica del IPC</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/DIE-BG/CPIDataBase.jl/blob/master/docs/src/CPITrees.md#" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Estructura-jerárquica-del-IPC"><a class="docs-heading-anchor" href="#Estructura-jerárquica-del-IPC">Estructura jerárquica del IPC</a><a id="Estructura-jerárquica-del-IPC-1"></a><a class="docs-heading-anchor-permalink" href="#Estructura-jerárquica-del-IPC" title="Permalink"></a></h1><article class="docstring"><header><a class="docstring-binding" id="CPIDataBase.CPITree" href="#CPIDataBase.CPITree"><code>CPIDataBase.CPITree</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">CPITree
+
+CPITree(base::FullCPIBase, tree::Union{Group, Item}, group_names::Vector{String}, group_codes::Vector{String})
+CPITree(; base::FullCPIBase, groupsdf::DataFrame, characters::(NTuple{N, Int} where N), upperlevel_code = &quot;_0&quot;, upperlevel_name = &quot;IPC&quot;)</code></pre><p>Contenedor envolvente de un árbol jerárquico del IPC y los datos necesarios de los gastos básicos para computar cualquier jerarquía dentro del árbol. Permite visualizar y explorar la composición del IPC de un país, así como computar los índices de precios de las diferentes jerarquías de la estructura del IPC. Está compuesto por: </p><ul><li>Un objeto <code>base</code>, de tipo <a href="../API/#CPIDataBase.FullCPIBase"><code>FullCPIBase</code></a>, el cual almacena las series de tiempo de los índices de los gastos básicos. </li><li>Un objeto <code>tree</code> que contiene la estructura de nodos del IPC.</li><li>El vector de nombres <code>group_names</code> de los grupos del árbol <code>tree</code>.</li><li>El vector de códigos <code>group_codes</code> de los grupos del árbol <code>tree</code>.</li></ul><p>El constructor simple requiere una estructura jerárquica de nodos como la devuelta por <a href="#CPIDataBase.get_cpi_tree"><code>get_cpi_tree</code></a>. Al utilizar el constructor con <code>groupsdf</code> y <code>characters</code>, se construye automáticamente un <code>CPITree</code> utilizando los códigos como indicadores de la estructura jerárquica. Los códigos de los gastos básicos contenidos en <code>base</code> describen cómo se agrupan las jerarquías. Por ejemplo, el siguiente <code>FullCPIBase</code> contiene 10 gastos básicos: </p><pre><code class="language-julia-repl hljs">julia&gt; base
+FullCPIBase{Float32, Float32}: 36 períodos × 10 gastos básicos Jan-01-Dec-03
+┌─────┬────────────┬─────────┬─────────┬─────────┬─────────┬─────────┬─────────┬─────────┬─────────┬─────────┬─────────┐
+│ Row │      Dates │ _011101 │ _011201 │ _011202 │ _021101 │ _022101 │ _031101 │ _041101 │ _041201 │ _041202 │ _041301 │
+│     │            │  Item A │  Item B │  Item C │  Item D │  Item E │  Item F │  Item G │  Item H │  Item I │  Item J │
+│     │            │ 11.8947 │ 2.39931 │ 7.80836 │ 1.58585 │  20.141 │ 12.0526 │ 9.56901 │ 14.6256 │ 15.0276 │ 4.89602 │
+├─────┼────────────┼─────────┼─────────┼─────────┼─────────┼─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤
+│   1 │ 2001-01-01 │  100.00 │  100.00 │  100.00 │  100.00 │  100.00 │  101.13 │  100.00 │  100.00 │  100.51 │  100.00 │
+│   2 │ 2001-02-01 │  100.00 │  100.00 │  100.00 │  100.00 │  100.00 │  102.28 │  100.00 │  100.00 │  101.02 │  100.00 │
+│   3 │ 2001-03-01 │  100.00 │  100.00 │  100.00 │  100.00 │  100.00 │  103.44 │  100.00 │  100.00 │  101.53 │  100.00 │
+│   4 │ 2001-04-01 │  100.00 │  100.00 │  100.00 │  100.00 │  100.00 │  104.61 │  100.00 │  100.00 │  102.05 │  100.00 │
+│   5 │ 2001-05-01 │  100.00 │  100.00 │  100.00 │  100.00 │  100.00 │  105.79 │  100.00 │  100.00 │  102.56 │  100.00 │
+│  ⋮  │     ⋮      │    ⋮    │    ⋮    │    ⋮    │    ⋮    │    ⋮    │    ⋮    │    ⋮    │    ⋮    │    ⋮    │    ⋮    │
+│  32 │ 2003-08-01 │  100.00 │  100.00 │  100.00 │  100.00 │  100.00 │  143.39 │  100.00 │  100.00 │  117.59 │  100.00 │
+│  33 │ 2003-09-01 │  100.00 │  100.00 │  100.00 │  100.00 │  100.00 │  145.02 │  100.00 │  100.00 │  118.19 │  100.00 │
+│  34 │ 2003-10-01 │  100.00 │  100.00 │  100.00 │  100.00 │  100.00 │  146.66 │  100.00 │  100.00 │  118.79 │  100.00 │
+│  35 │ 2003-11-01 │  100.00 │  100.00 │  100.00 │  100.00 │  100.00 │  148.32 │  100.00 │  100.00 │  119.39 │  100.00 │
+│  36 │ 2003-12-01 │  100.00 │  100.00 │  100.00 │  100.00 │  100.00 │  150.00 │  100.00 │  100.00 │  120.00 │  100.00 │
+└─────┴────────────┴─────────┴─────────┴─────────┴─────────┴─────────┴─────────┴─────────┴─────────┴─────────┴─────────┘
+                                                                                                         26 rows omitted</code></pre><p>En este ejemplo, el argumento debe especificarse como <code>characters = (3, 4, 5, 7)</code>, pues los códigos indican las jerarquías en el IPC de manera siguiente: </p><ul><li>Los primeros 3 caracteres indican la jerarquía de <em>división de gasto</em>. </li><li>El siguiente caracter indica la jerarquía de <em>agrupación de gasto</em>. </li><li>El siguiente caracter indica la jerarquía de <em>subgrupo de gasto</em>. </li><li>Los siguientes 2 caracteres indican el <em>número de gasto básico dentro de su grupo</em>. </li></ul><p>Por su parte, el DataFrame <code>groupsdf</code> debe tener la estructura mínima siguiente: </p><ul><li>La primera columna debe ser de tipo <code>String</code> y contiene los códigos de los grupos disponibles en la estructura del IPC. </li><li>La segunda columna debe ser de tipo <code>String</code> y contiene las descripciones o</li></ul><p>nombres de los grupos disponibles en la estructura del IPC. Por ejemplo, el DataFrame <code>groupsdf</code> puede verse de esta forma: </p><pre><code class="nohighlight hljs">17×2 DataFrame
+ Row │ code    description 
+     │ String  String      
+─────┼─────────────────────
+   1 │ _01     Div._01
+   2 │ _02     Div._02
+   3 │ _03     Div._03
+   4 │ _04     Div._04
+   5 │ _011    Agr._011
+   6 │ _021    Agr._021
+   7 │ _022    Agr._022
+   8 │ _031    Agr._031
+   9 │ _041    Agr._041
+  10 │ _0111   Subgr._0111
+  11 │ _0112   Subgr._0112
+  12 │ _0211   Subgr._0211
+  13 │ _0221   Subgr._0221
+  14 │ _0311   Subgr._0311
+  15 │ _0411   Subgr._0411
+  16 │ _0412   Subgr._0412
+  17 │ _0413   Subgr._0413</code></pre><p>Por ejemplo, al construir un <code>CPITree</code> con la estructura de códigos indicada anteriormente y el DataFrame de ejemplo, el árbol del IPC se puede ver de esta forma: </p><pre><code class="language-julia-repl hljs">julia&gt; tree = CPITree(; base, groupsdf, characters=(3,4,5,7))
+CPITree{Group{Group{Group{Group{Item{Float32}, Float32}, Float32}, Float32}, Float32}} con datos
+└─→ FullCPIBase{Float32, Float32}: 36 períodos × 10 gastos básicos Jan-01-Dec-03
+_0: IPC [100.0]
+├─ _01: Div._01 [21.491905]
+│  └─ _011: Agr._011 [21.491905]
+│     ├─ _0111: Subgr._0111 [7.352945]
+│     │  └─ _011101: Item A [7.352945]
+│     └─ _0112: Subgr._0112 [14.13896]
+│        ├─ _011201: Item B [6.7442417]
+│        └─ _011202: Item C [7.394718]
+├─ _02: Div._02 [3.0530455]
+│  ├─ _021: Agr._021 [1.1036392]
+│  │  └─ _0211: Subgr._0211 [1.1036392]
+│  │     └─ _021101: Item D [1.1036392]
+│  └─ _022: Agr._022 [1.9494063]
+│     └─ _0221: Subgr._0221 [1.9494063]
+│        └─ _022101: Item E [1.9494063]
+├─ _03: Div._03 [11.68543]
+│  └─ _031: Agr._031 [11.68543]
+│     └─ _0311: Subgr._0311 [11.68543]
+│        └─ _031101: Item F [11.68543]
+└─ _04: Div._04 [63.769615]
+   └─ _041: Agr._041 [63.769615]
+      ├─ _0411: Subgr._0411 [16.103952]
+      │  └─ _041101: Item G [16.103952]
+      ├─ _0412: Subgr._0412 [28.824577]
+      │  ├─ _041201: Item H [11.367162]
+      │  └─ _041202: Item I [17.457417]
+      └─ _0413: Subgr._0413 [18.841085]
+         └─ _041301: Item J [18.841085]</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/DIE-BG/CPIDataBase.jl/blob/59510bd08c8463b37321b539028560ca956fa301/src/tree/CPItree.jl#L335-L453">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="CPIDataBase.Group" href="#CPIDataBase.Group"><code>CPIDataBase.Group</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">Group{S,T}
+
+Group(code, name, children::Vector{S}) where S
+Group(code, name, children...)</code></pre><p>Representa un nodo de agrupación de cualquier nivel en la estructura de nodos del IPC. Puede almacenar gastos básicos u otros grupos de mayor jerarquía. Almacena el código del grupo, su nombre o descripción y su ponderación en el IPC. </p><p>Posee los campos: </p><ul><li><code>code</code>: almacena el código del grupo como un <code>String</code>.</li><li><code>name</code>: almacena el nombre del grupo como un <code>String</code>.</li><li><code>weight::T</code>: almacena la ponderación del grupo como un valor flotante de tipo <code>T</code>.</li><li><code>children::Vector{S}</code>: almacena el vector de nodos &quot;hijos&quot; de la estructura. Por ejemplo, este vector podría ser un vector de elementos <code>Item</code> para agrupar un conjunto de gastos básicos.</li></ul><p>Aunque este nodo será usualmente creado de manera automática por métodos como <a href="#CPIDataBase.CPITree"><code>CPITree</code></a>, se pueden crear estructuras jerárquicas manualmente. Por ejemplo, para crear un grupo: </p><pre><code class="language-julia-repl hljs">julia&gt; a = Item(&quot;_011201&quot;, &quot;Item B&quot;, 6.7442417f0)
+Item{Float32}(&quot;_011201&quot;, &quot;Item B&quot;, 6.7442417f0)
+
+julia&gt; b = Item(&quot;_011202&quot;, &quot;Item C&quot;, 7.394718f0)
+Item{Float32}(&quot;_011202&quot;, &quot;Item C&quot;, 7.394718f0)
+
+julia&gt; g = Group(&quot;_0112&quot;, &quot;Subgr._0112&quot;, a, b)
+Group{Item{Float32}, Float32}
+_0112: Subgr._0112 [14.13896] 
+├─ _011201: Item B [6.7442417]
+└─ _011202: Item C [7.394718]</code></pre><p>Ver también: <a href="#CPIDataBase.Item"><code>Item</code></a>, <a href="#CPIDataBase.CPITree"><code>CPITree</code></a>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/DIE-BG/CPIDataBase.jl/blob/59510bd08c8463b37321b539028560ca956fa301/src/tree/CPItree.jl#L37-L75">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="CPIDataBase.Item" href="#CPIDataBase.Item"><code>CPIDataBase.Item</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia hljs">Item{T}(code::String, name::String, weight::T&lt;:AbstractFloat)</code></pre><p>Representa un gasto básico en la estructura de nodos del IPC. Es el nivel más bajo de la estructura. Almacena el código del gasto básico, su nombre o descripción y su ponderación en el IPC. Los datos de este nodo deben estar disponibles en algún <a href="../API/#CPIDataBase.FullCPIBase"><code>FullCPIBase</code></a>. </p><p>Posee los campos: </p><ul><li><code>code</code>: que almacena el código del gasto básico como un <code>String</code>.</li><li><code>name</code>: que almacena el nombre del gasto básico como un <code>String</code>.</li><li><code>weight::T</code>: que almacena la ponderación del gasto básico como un valor flotante de tipo <code>T</code>.</li></ul><p>Aunque este nodo será usualmente creado de manera automática por métodos como <a href="#CPIDataBase.CPITree"><code>CPITree</code></a>, se pueden crear estructuras jerárquicas manualmente. Por ejemplo, para crear un nodo del nivel inferior: </p><pre><code class="language-julia-repl hljs">julia&gt; Item(&quot;_011101&quot;, &quot;Item A&quot;, 7.352945f0)
+Item{Float32}(&quot;_011101&quot;, &quot;Item A&quot;, 7.352945f0)</code></pre><p>Ver también: <a href="#CPIDataBase.Group"><code>Group</code></a>, <a href="#CPIDataBase.CPITree"><code>CPITree</code></a>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/DIE-BG/CPIDataBase.jl/blob/59510bd08c8463b37321b539028560ca956fa301/src/tree/CPItree.jl#L7-L30">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Base.getindex-Tuple{CPITree, AbstractString}" href="#Base.getindex-Tuple{CPITree, AbstractString}"><code>Base.getindex</code></a> — <span class="docstring-category">Method</span></header><section><div><pre><code class="language-julia hljs">Base.getindex(cpitree::CPITree, code::AbstractString)</code></pre><p>Este método se utiliza para indexar el árbol jerárquico <code>cpitree</code> y obtener una estructura similar cuyo nodo superior sea el nodo con el código provisto <code>code</code>. Por ejemplo, si tenemos el siguiente árbol: </p><pre><code class="language-julia-repl hljs">julia&gt; tree
+CPITree{Group{Group{Group{Group{Item{Float32}, Float32}, Float32}, Float32}, Float32}} con datos
+└─→ FullCPIBase{Float32, Float32}: 36 períodos × 10 gastos básicos Jan-01-Dec-03
+_0: IPC [100.0]
+├─ _01: Div._01 [21.491905]
+│  └─ _011: Agr._011 [21.491905]
+│     ├─ _0111: Subgr._0111 [7.352945]
+│     │  └─ _011101: Item A [7.352945]
+│     └─ _0112: Subgr._0112 [14.13896]
+│        ├─ _011201: Item B [6.7442417]
+│        └─ _011202: Item C [7.394718]
+├─ _02: Div._02 [3.0530455]
+│  ├─ _021: Agr._021 [1.1036392] 
+│  │  └─ _0211: Subgr._0211 [1.1036392]
+│  │     └─ _021101: Item D [1.1036392]
+│  └─ _022: Agr._022 [1.9494063]
+│     └─ _0221: Subgr._0221 [1.9494063]
+│        └─ _022101: Item E [1.9494063]
+├─ _03: Div._03 [11.68543]
+│  └─ _031: Agr._031 [11.68543]
+│     └─ _0311: Subgr._0311 [11.68543]
+│        └─ _031101: Item F [11.68543]
+└─ _04: Div._04 [63.769615]
+   └─ _041: Agr._041 [63.769615]
+      ├─ _0411: Subgr._0411 [16.103952]
+      │  └─ _041101: Item G [16.103952]
+      ├─ _0412: Subgr._0412 [28.824577]
+      │  ├─ _041201: Item H [11.367162]
+      │  └─ _041202: Item I [17.457417]
+      └─ _0413: Subgr._0413 [18.841085]
+         └─ _041301: Item J [18.841085]</code></pre><p>Al indexar por un código, como <code>_041</code>, obtenemos una estructura similar a partir de ese nodo:</p><pre><code class="language-julia-repl hljs">julia&gt; tree[&quot;_041&quot;]
+CPITree{Group{Group{Item{Float32}, Float32}, Float32}} con datos
+└─→ FullCPIBase{Float32, Float32}: 36 períodos × 10 gastos básicos Jan-01-Dec-03
+_041: Agr._041 [63.769615]
+├─ _0411: Subgr._0411 [16.103952]
+│  └─ _041101: Item G [16.103952] 
+├─ _0412: Subgr._0412 [28.824577]
+│  ├─ _041201: Item H [11.367162]
+│  └─ _041202: Item I [17.457417]
+└─ _0413: Subgr._0413 [18.841085]
+   └─ _041301: Item J [18.841085]</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/DIE-BG/CPIDataBase.jl/blob/59510bd08c8463b37321b539028560ca956fa301/src/tree/CPItree.jl#L495-L548">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="CPIDataBase.compute_index" href="#CPIDataBase.compute_index"><code>CPIDataBase.compute_index</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">compute_index(cpitree::CPITree [, code::AbstractString])</code></pre><p>Permite computar el índice de precios de la jerarquía provista en <code>code</code>. Si se omite <code>code</code>, se computa la jerarquía padre de la estructura <code>cpitree</code>. Si el nodo no se encuentra en el árbol, devuelve <code>nothing</code>.</p><pre><code class="language-julia-repl hljs">julia&gt; tree
+CPITree{Group{Group{Group{Group{Item{Float32}, Float32}, Float32}, Float32}, Float32}} con datos
+└─→ FullCPIBase{Float32, Float32}: 36 períodos × 10 gastos básicos Jan-01-Dec-03
+_0: IPC [100.0]
+├─ _01: Div._01 [21.491905]
+│  └─ _011: Agr._011 [21.491905]
+│     ├─ _0111: Subgr._0111 [7.352945]
+│     │  └─ _011101: Item A [7.352945]
+│     └─ _0112: Subgr._0112 [14.13896]
+│        ├─ _011201: Item B [6.7442417]
+│        └─ _011202: Item C [7.394718]
+├─ _02: Div._02 [3.0530455]
+│  ├─ _021: Agr._021 [1.1036392]
+│  │  └─ _0211: Subgr._0211 [1.1036392]
+│  │     └─ _021101: Item D [1.1036392]
+│  └─ _022: Agr._022 [1.9494063]
+│     └─ _0221: Subgr._0221 [1.9494063]
+│        └─ _022101: Item E [1.9494063]
+├─ _03: Div._03 [11.68543]
+│  └─ _031: Agr._031 [11.68543]
+│     └─ _0311: Subgr._0311 [11.68543]
+│        └─ _031101: Item F [11.68543]
+└─ _04: Div._04 [63.769615]
+   └─ _041: Agr._041 [63.769615]
+      ├─ _0411: Subgr._0411 [16.103952]
+      │  └─ _041101: Item G [16.103952]
+      ├─ _0412: Subgr._0412 [28.824577]
+      │  ├─ _041201: Item H [11.367162]
+      │  └─ _041202: Item I [17.457417]
+      └─ _0413: Subgr._0413 [18.841085]
+         └─ _041301: Item J [18.841085]
+
+julia&gt; compute_index(tree, &quot;_041&quot;)
+36-element Vector{Float32}:
+ 100.13899
+ 100.2787
+ 100.41912
+ 100.560234
+ 100.70207
+ 100.84464
+ 100.98792
+   ⋮
+ 104.65377
+ 104.81638
+ 104.97984
+ 105.14412
+ 105.309235
+ 105.47519
+
+julia&gt; compute_index(tree[&quot;_041&quot;])
+36-element Vector{Float32}:
+ 100.13899
+ 100.2787
+ 100.41912
+ 100.560234
+ 100.70207
+ 100.84464
+ 100.98792
+   ⋮
+ 104.65377
+ 104.81638
+ 104.97984
+ 105.14412
+ 105.309235
+ 105.47519
+
+julia&gt; a = tree[&quot;_041302&quot;]
+
+julia&gt; a === nothing
+true</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/DIE-BG/CPIDataBase.jl/blob/59510bd08c8463b37321b539028560ca956fa301/src/tree/CPItree.jl#L555-L634">source</a></section></article><h2 id="Funciones-de-bajo-nivel"><a class="docs-heading-anchor" href="#Funciones-de-bajo-nivel">Funciones de bajo nivel</a><a id="Funciones-de-bajo-nivel-1"></a><a class="docs-heading-anchor-permalink" href="#Funciones-de-bajo-nivel" title="Permalink"></a></h2><article class="docstring"><header><a class="docstring-binding" id="CPIDataBase.cpi_tree_nodes" href="#CPIDataBase.cpi_tree_nodes"><code>CPIDataBase.cpi_tree_nodes</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">cpi_tree_nodes(codes::Vector{&lt;:AbstractString}; 
+    characters::(NTuple{N, Int} where N), depth::Int=1, chars::Int=characters[depth], prefix::AbstractString=&quot;&quot;, 
+    base::FullCPIBase, 
+    group_names::Vector{&lt;:AbstractString}, 
+    group_codes::Vector{&lt;:AbstractString})</code></pre><p>Construye y devuelve una lista de nodos a partir de la lista de códigos <code>codes</code> o de la especificación jerárquica de caracteres en <code>characters</code>. Los nombres y las ponderaciones del nivel inferior (nivel de gasto básico) son obtenidas de la estructura <code>base</code>. Se debe proveer el vector de códigos y nombres de todas las jerarquías superiores en la estructura de códigos en los vectores <code>group_names</code> y <code>group_codes</code>.</p><p>Esta función permite crear únicamente la estructura jerárquica de nodos. Para construir de manera automática una estructura del IPC, se recomienda utilizar preferentemente <a href="#CPIDataBase.CPITree"><code>CPITree</code></a>.</p><p>Vea también: <a href="#CPIDataBase.CPITree"><code>CPITree</code></a>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/DIE-BG/CPIDataBase.jl/blob/59510bd08c8463b37321b539028560ca956fa301/src/tree/CPItree.jl#L110-L127">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="CPIDataBase.get_cpi_tree" href="#CPIDataBase.get_cpi_tree"><code>CPIDataBase.get_cpi_tree</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia hljs">get_cpi_tree(; 
+    base::FullCPIBase, 
+    group_names::Vector{&lt;:AbstractString}, 
+    group_codes::Vector{&lt;:AbstractString}, 
+    characters::(NTuple{N, Int} where N),
+    upperlevel_code = &quot;_0&quot;, 
+    upperlevel_name = &quot;IPC&quot;)</code></pre><p>Función superior para obtener estructura jerárquica del IPC. Devuelve el nodo superior del árbol jerárquico. Utiliza la función de más bajo nivel <code>cpi_tree_nodes</code> para construir los nodos del nivel más alto y hacia abajo en la estructura jerárquica. Se debe proveer el vector de códigos y nombres de todas las jerarquías superiores en la estructura de códigos en los vectores <code>group_names</code> y <code>group_codes</code>. </p><p>Esta función permite crear únicamente la estructura jerárquica de nodos. Para construir de manera automática una estructura del IPC, se recomienda utilizar preferentemente <a href="#CPIDataBase.CPITree"><code>CPITree</code></a>.</p><p>Vea también: <a href="#CPIDataBase.CPITree"><code>CPITree</code></a>.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/DIE-BG/CPIDataBase.jl/blob/59510bd08c8463b37321b539028560ca956fa301/src/tree/CPItree.jl#L179-L198">source</a></section></article></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Introducción</a><a class="docs-footer-nextpage" href="../API/">API »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.12 on <span class="colophon-date" title="Friday 13 January 2023 20:29">Friday 13 January 2023</span>. Using Julia version 1.8.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
