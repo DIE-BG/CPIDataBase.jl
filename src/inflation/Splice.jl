@@ -2,7 +2,7 @@
 """
     Splice <: InflationFunction
 
-    Splice(inflfn1, inflfn2, date1, date2)
+    Splice(inflfn1, inflfn2, date1, date2, name, tag)
 
 Función de inflación para empalmar dos funciones de inflación.
 Las fechas denotan el intervalo de transición
@@ -12,6 +12,12 @@ struct Splice <: InflationFunction
     g::InflationFunction
     a::Date
     b::Date
+    name::Union{Nothing, String}
+    tag::Union{Nothing, String}
+
+    function SSSplice(f::InflationFunction, g::InflationFunction, a::Date, b::Date, name=nothing, tag=nothing)
+        new(f, g, a, b, name, tag)
+    end
 end
 
 
@@ -46,7 +52,7 @@ function (inflfn::Splice)(cs::CountryStructure, ::CPIVarInterm)
     X = cpi_dates(cs)
     F = ramp_down(X,a,b)
     G = ramp_up(X,a,b)
-    OUT = (f(cs, CPIIndex()) |> varinterm).*F .+ (g(cs, CPIIndex())|> varinterm) .* G 
+    OUT = (f(cs, CPIVarInterm())).*F .+ (g(cs, CPIVarInterm())) .* G 
     OUT 
 end
 
@@ -61,10 +67,12 @@ function (inflfn::Splice)(cs::CountryStructure, ::CPIIndex)
     v_interm  
 end
 
-function measure_name(inflfn::Splice)
-    return measure_name(inflfn.f)*" -> "*measure_name(inflfn.g)
+function Measure_name(inflfn::Splice)
+    isnothing(inflfn.name) || return inflfn.name
+    measure_name(inflfn.f)*" -> "*measure_name(inflfn.g)
 end
 
-function measure_tag(inflfn::Splice)
-    return measure_tag(inflfn.f)*" -> "*measure_tag(inflfn.g)
+function Measure_tag(inflfn::Splice)
+    isnothing(inflfn.tag) || return inflfn.tag
+    measure_tag(inflfn.f)*" -> "*measure_tag(inflfn.g)
 end
