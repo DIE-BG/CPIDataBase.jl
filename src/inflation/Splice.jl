@@ -15,7 +15,7 @@ struct Splice <: InflationFunction
     name::Union{Nothing, String}
     tag::Union{Nothing, String}
 
-    function SSSplice(f::InflationFunction, g::InflationFunction, a::Date, b::Date, name=nothing, tag=nothing)
+    function Splice(f::InflationFunction, g::InflationFunction, a::Date, b::Date, name=nothing, tag=nothing)
         new(f, g, a, b, name, tag)
     end
 end
