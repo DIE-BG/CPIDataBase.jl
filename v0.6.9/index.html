@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Introducción · CPIDataBase.jl</title><script data-outdated-warner src="assets/warner.js"></script><link rel="canonical" href="https://die-bg.github.io/CPIDataBase.jl/"/><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.039/juliamono-regular.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.11/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="assets/documenter.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><script src="../copy.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href>CPIDataBase.jl</a></span></div><form class="docs-search" action="search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li class="is-active"><a class="tocitem" href>Introducción</a><ul class="internal"><li><a class="tocitem" href="#Estructura-de-datos-del-IPC"><span>Estructura de datos del IPC</span></a></li><li><a class="tocitem" href="#Cómputo-del-IPC"><span>Cómputo del IPC</span></a></li></ul></li><li><a class="tocitem" href="CPITrees/">Estructura jerárquica del IPC</a></li><li><a class="tocitem" href="API/">API</a></li><li><a class="tocitem" href="TestHelpers/">TestHelpers API</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Introducción</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Introducción</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/DIE-BG/CPIDataBase.jl/blob/master/docs/src/index.md#" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="CPIDataBase"><a class="docs-heading-anchor" href="#CPIDataBase">CPIDataBase</a><a id="CPIDataBase-1"></a><a class="docs-heading-anchor-permalink" href="#CPIDataBase" title="Permalink"></a></h1><p>Este paquete provee estructuras de datos y operaciones básicas para el análisis desagregado del Índice de Precios al Consumidor (IPC). El objetivo de este paquete es proveer una herramienta de análisis y consulta de los datos desagregados a nivel de gasto básico del IPC de cualquier país para estudios relacionados con la inflación.</p><h2 id="Estructura-de-datos-del-IPC"><a class="docs-heading-anchor" href="#Estructura-de-datos-del-IPC">Estructura de datos del IPC</a><a id="Estructura-de-datos-del-IPC-1"></a><a class="docs-heading-anchor-permalink" href="#Estructura-de-datos-del-IPC" title="Permalink"></a></h2><p>La estructura principal de datos es un contenedor de tipo <a href="API/#CPIDataBase.CountryStructure"><code>CountryStructure</code></a>. Supongamos que los datos del IPC de un país ficticio, llamado Macronia, se encuentran disponibles en la constante <code>countrydata</code>: </p><pre><code class="language-julia hljs">using CPIDataBase
+# Cargar o construir countrydata
+# (...)
+countrydata</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">UniformCountryStructure{2, Float32, Float32} con 2 bases
+└─→ VarCPIBase{Float32, Float32}: 120 períodos × 218 gastos básicos Jan-01-Dec-10
+└─→ VarCPIBase{Float32, Float32}: 120 períodos × 279 gastos básicos Jan-11-Dec-20
+</code></pre><p>Este contenedor posee los datos del IPC de Macronia de las últimas dos décadas. Está dividido en dos estructuras de datos denominadas <a href="API/#CPIDataBase.VarCPIBase"><code>VarCPIBase</code></a>. Cada estructura contiene las variaciones intermensuales de los números índices de precios de los gastos básicos individuales del IPC de Macronia. A su vez, el IPC de Macronia está dividido históricamente en dos bases del IPC, cada una conlleva una  metodología diferente, con diferentes gastos básicos y ponderaciones en la canasta de consumo: </p><p>Por ejemplo, estos son los datos históricos de Macronia en la década del 2000: </p><pre><code class="language-julia hljs">countrydata[1]</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">VarCPIBase{Float32, Float32}: 120 períodos × 218 gastos básicos Jan-01-Dec-10
+┌─────┬────────────┬──────────┬──────────┬──────────┬──────────┬──────────┬─────
+│ Row │      Dates │        1 │        2 │        3 │        4 │        5 │    ⋯
+│     │            │ 0.594818 │ 0.307931 │ 0.153558 │ 0.726739 │ 0.122272 │ 0. ⋯
+├─────┼────────────┼──────────┼──────────┼──────────┼──────────┼──────────┼─────
+│   1 │ 2001-01-01 │   0.4657 │   0.3523 │   0.1931 │   0.2668 │   0.0367 │    ⋯
+│   2 │ 2001-02-01 │   0.4182 │   0.3033 │   0.0554 │   0.1432 │   0.3009 │    ⋯
+│   3 │ 2001-03-01 │   0.4337 │   0.2307 │   0.4367 │   0.2993 │   0.4426 │    ⋯
+│   4 │ 2001-04-01 │   0.0519 │   0.4239 │   0.4507 │   0.3446 │   0.0532 │    ⋯
+│   5 │ 2001-05-01 │   0.3679 │   0.4733 │   0.3168 │   0.0830 │   0.3185 │    ⋯
+│   6 │ 2001-06-01 │   0.2332 │   0.2667 │   0.4075 │   0.0229 │   0.1527 │    ⋯
+│   7 │ 2001-07-01 │   0.1561 │   0.4229 │   0.1413 │   0.3694 │   0.2370 │    ⋯
+│   8 │ 2001-08-01 │   0.1604 │   0.3415 │   0.1841 │   0.2735 │   0.2015 │    ⋯
+│  ⋮  │     ⋮      │    ⋮     │    ⋮     │    ⋮     │    ⋮     │    ⋮     │    ⋱
+│ 114 │ 2010-06-01 │   0.0519 │   0.4558 │   0.0502 │   0.2075 │   0.0253 │    ⋯
+│ 115 │ 2010-07-01 │   0.1150 │   0.0303 │   0.0502 │   0.2739 │   0.4922 │    ⋯
+│ 116 │ 2010-08-01 │   0.0552 │   0.1044 │   0.2277 │   0.2227 │   0.3378 │    ⋯
+│ 117 │ 2010-09-01 │   0.0980 │   0.3918 │   0.4433 │   0.0788 │   0.4975 │    ⋯
+│ 118 │ 2010-10-01 │   0.4638 │   0.4076 │   0.2026 │   0.4508 │   0.4295 │    ⋯
+│ 119 │ 2010-11-01 │   0.1319 │   0.4505 │   0.2525 │   0.4599 │   0.1488 │    ⋯
+│ 120 │ 2010-12-01 │   0.0529 │   0.0289 │   0.4228 │   0.4083 │   0.1835 │    ⋯
+└─────┴────────────┴──────────┴──────────┴──────────┴──────────┴──────────┴─────
+                                                213 columns and 105 rows omitted
+</code></pre><p>Y estos son los datos históricos de Macronia en la década del 2010: </p><pre><code class="language-julia hljs">countrydata[2]</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">VarCPIBase{Float32, Float32}: 120 períodos × 279 gastos básicos Jan-11-Dec-20
+┌─────┬────────────┬─────────┬──────────┬───────────┬─────────┬──────────┬──────
+│ Row │      Dates │       1 │        2 │         3 │       4 │        5 │     ⋯
+│     │            │ 0.35803 │ 0.515756 │ 0.0758793 │ 0.48435 │ 0.286185 │ 0.4 ⋯
+├─────┼────────────┼─────────┼──────────┼───────────┼─────────┼──────────┼──────
+│   1 │ 2011-01-01 │  0.2655 │   0.1755 │    0.2677 │  0.4876 │   0.4407 │   0 ⋯
+│   2 │ 2011-02-01 │  0.1092 │   0.4505 │    0.1209 │  0.4394 │   0.1098 │   0 ⋯
+│   3 │ 2011-03-01 │  0.3253 │   0.3594 │    0.3433 │  0.3430 │   0.3860 │   0 ⋯
+│   4 │ 2011-04-01 │  0.2293 │   0.1950 │    0.3368 │  0.2232 │   0.2294 │   0 ⋯
+│   5 │ 2011-05-01 │  0.1961 │   0.3202 │    0.1157 │  0.1060 │   0.3012 │   0 ⋯
+│   6 │ 2011-06-01 │  0.0279 │   0.2675 │    0.4914 │  0.3266 │   0.3760 │   0 ⋯
+│   7 │ 2011-07-01 │  0.1800 │   0.3725 │    0.0908 │  0.1171 │   0.2606 │   0 ⋯
+│   8 │ 2011-08-01 │  0.3159 │   0.2375 │    0.1118 │  0.1494 │   0.3726 │   0 ⋯
+│  ⋮  │     ⋮      │    ⋮    │    ⋮     │     ⋮     │    ⋮    │    ⋮     │     ⋱
+│ 114 │ 2020-06-01 │  0.2828 │   0.1840 │    0.1347 │  0.2950 │   0.2749 │   0 ⋯
+│ 115 │ 2020-07-01 │  0.3017 │   0.0940 │    0.4959 │  0.3402 │   0.4573 │   0 ⋯
+│ 116 │ 2020-08-01 │  0.3248 │   0.4966 │    0.1519 │  0.3700 │   0.4849 │   0 ⋯
+│ 117 │ 2020-09-01 │  0.1734 │   0.2111 │    0.4853 │  0.1654 │   0.2396 │   0 ⋯
+│ 118 │ 2020-10-01 │  0.2577 │   0.1926 │    0.0709 │  0.1899 │   0.2409 │   0 ⋯
+│ 119 │ 2020-11-01 │  0.4435 │   0.0524 │    0.1758 │  0.2397 │   0.0931 │   0 ⋯
+│ 120 │ 2020-12-01 │  0.1367 │   0.0625 │    0.2315 │  0.1556 │   0.2040 │   0 ⋯
+└─────┴────────────┴─────────┴──────────┴───────────┴─────────┴──────────┴──────
+                                                274 columns and 105 rows omitted
+</code></pre><p>Vea la documentación de <a href="API/#CPIDataBase.FullCPIBase"><code>FullCPIBase</code></a> para conocer cómo crear la estructura de datos del IPC necesaria. Los datos de un <a href="API/#CPIDataBase.FullCPIBase"><code>FullCPIBase</code></a> pueden ser convertidos a un <a href="API/#CPIDataBase.VarCPIBase"><code>VarCPIBase</code></a>. La estructura principal de datos de este paquete es un contenedor de tipo <a href="API/#CPIDataBase.CountryStructure"><code>CountryStructure</code></a>, el cual permite realizar cómputos de diferentes metodologías de inflación. </p><h2 id="Cómputo-del-IPC"><a class="docs-heading-anchor" href="#Cómputo-del-IPC">Cómputo del IPC</a><a id="Cómputo-del-IPC-1"></a><a class="docs-heading-anchor-permalink" href="#Cómputo-del-IPC" title="Permalink"></a></h2><p>Con la estructura <code>countrydata</code> es posible computar el Índice de Precios al Consumidor encadenado automáticamente entre las dos bases del IPC: </p><pre><code class="language-julia hljs">inflfn = InflationTotalCPI()
+inflfn(countrydata, CPIIndex())</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">240-element Vector{Float32}:
+ 100.25772
+ 100.51936
+ 100.75933
+ 101.00667
+ 101.26368
+ 101.52573
+ 101.793274
+ 102.0619
+ 102.327995
+ 102.584404
+   ⋮
+ 178.57161
+ 179.02742
+ 179.45204
+ 179.92328
+ 180.40506
+ 180.84894
+ 181.29404
+ 181.75288
+ 182.24185</code></pre><p>En este ejemplo, la variable <code>inflfn</code> denota una &quot;función de inflación&quot;. Utilizando diferentes funciones de inflación podemos computar diferentes medidas de inflación con los datos desagregados del IPC. Por ejemplo, el siguiente código computa la variación interanual del IPC, ampliamente utilizada como una medida de inflación en las economías del mundo: </p><pre><code class="language-julia hljs">inflfn = InflationTotalCPI()
+inflfn(countrydata)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">229-element Vector{Float32}:
+ 3.0831456
+ 3.05506
+ 3.0303717
+ 3.042245
+ 3.0478716
+ 3.0403852
+ 3.030181
+ 3.0222416
+ 3.015256
+ 3.0128717
+ ⋮
+ 3.0396223
+ 3.0528069
+ 3.042078
+ 3.0562997
+ 3.0612826
+ 3.0496836
+ 3.0588984
+ 3.0518293
+ 3.090036</code></pre></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="CPITrees/">Estructura jerárquica del IPC »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.12 on <span class="colophon-date" title="Monday 16 January 2023 16:49">Monday 16 January 2023</span>. Using Julia version 1.8.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
