@@ -67,12 +67,12 @@ function (inflfn::Splice)(cs::CountryStructure, ::CPIIndex)
     v_interm  
 end
 
-function Measure_name(inflfn::Splice)
+function measure_name(inflfn::Splice)
     isnothing(inflfn.name) || return inflfn.name
     measure_name(inflfn.f)*" -> "*measure_name(inflfn.g)
 end
 
-function Measure_tag(inflfn::Splice)
+function measure_tag(inflfn::Splice)
     isnothing(inflfn.tag) || return inflfn.tag
     measure_tag(inflfn.f)*" -> "*measure_tag(inflfn.g)
 end
