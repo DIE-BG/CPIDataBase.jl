@@ -53,7 +53,7 @@ function (inflfn::Splice)(cs::CountryStructure, ::CPIVarInterm)
     F = ramp_down(X,a,b)
     G = ramp_up(X,a,b)
     OUT = (f(cs, CPIVarInterm())).*F .+ (g(cs, CPIVarInterm())) .* G 
-    OUT 
+    convert(Array{eltype(cs)}, OUT) 
 end
 
 function (inflfn::Splice)(cs::CountryStructure)
