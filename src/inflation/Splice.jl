@@ -76,3 +76,75 @@ function measure_tag(inflfn::Splice)
     isnothing(inflfn.tag) || return inflfn.tag
     measure_tag(inflfn.f)*" -> "*measure_tag(inflfn.g)
 end
+
+function splice_length(inflfn::InflationFunction)
+    if !(inflfn isa Splice)
+        return 1
+    else 
+        n = 0
+        for x in [inflfn.f, inflfn.g]
+            n += splice_length(x)
+        end
+        return n
+    end
+end
+
+
+function splice_inflfns(inflfn::InflationFunction, n=nothing)
+    if !(inflfn isa Splice)
+        return inflfn
+    else 
+        OUT = []
+        x = [inflfn.f, inflfn.g]
+        append!(OUT,splice_inflfns.(x))
+        OUT = reduce(vcat, OUT)
+        isnothing(n) || return OUT[n]
+        OUT
+    end
+end
+
+function splice_inflfns_types(inflfn::InflationFunction, n=nothing)
+    if !(inflfn isa Splice)
+        return typeof(inflfn)
+    else 
+        OUT = []
+        x = [inflfn.f, inflfn.g]
+        append!(OUT,splice_inflfns_types.(x))
+        OUT = reduce(vcat, OUT)
+        isnothing(n) || return OUT[n]
+        OUT
+    end
+end
+
+function splice_dates(inflfn::InflationFunction)
+    if !(inflfn isa Splice)
+        return NaN
+    end
+    OUT = [] 
+    if !(inflfn.f isa Splice) & !(inflfn.g isa Splice)
+        append!(OUT,[NaN,[inflfn.a, inflfn.b]])
+    elseif (inflfn.f isa Splice) & !(inflfn.g isa Splice)
+        append!(OUT, [splice_dates(inflfn.f)..., [inflfn.a, inflfn.b]])
+    elseif !(inflfn.f isa Splice) & (inflfn.g isa Splice)
+        append!(OUT, [[inflfn.a, inflfn.b], splice_dates(inflfn.g)...])
+    elseif (inflfn.f isa Splice) & (inflfn.g isa Splice)
+        append!(OUT, [splice_dates(inflfn.f)..., splice_dates(inflfn.g)...])
+    end
+    OUT
+end
+
+function splice_measure_name(inflfn::InflationFunction, n=nothing)
+    return measure_name.(splice_inflfns(inflfn,n))
+end
+
+function splice_measure_tag(inflfn::InflationFunction, n=nothing)
+    return measure_tag.(splice_inflfns(inflfn,n))
+end
+
+function components(inflfn::Splice)
+    components = DataFrame(
+        measure = splice_measure_name(inflfn),
+        dates = splice_dates(inflfn)
+    )
+    components
+end

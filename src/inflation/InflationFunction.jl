@@ -95,4 +95,23 @@ end
 function (inflfn::InflationFunction)(::VarCPIBase)
     error("Se debe extender un método para computar la variación intermensual resumen de la medida de inflación " * string(nameof(inflfn)))
 end
-    
+
+
+# Con fecha
+function (inflfn::InflationFunction)(cs::CountryStructure, date::Date)
+    cpi_index = inflfn(cs, CPIIndex(), date)
+    varinteran(cpi_index)
+end
+
+function (inflfn::InflationFunction)(cs::CountryStructure, ::CPIIndex, date::Date)
+    v_interm = inflfn(cs, CPIVarInterm(), date)
+    capitalize!(v_interm, 100) # v_interm -> cpi_index
+    v_interm  
+end
+
+function (inflfn::InflationFunction)(cs::CountryStructure, ::CPIVarInterm, date::Date) 
+    # Acá se llama a inflfn(base), en donde base es de tipo VarCPIBase. Esta
+    # es la función que debe definirse para cualquier medida de inflación.
+    v_interm = mapfoldl(inflfn, vcat, cs.base)
+    v_interm
+end
