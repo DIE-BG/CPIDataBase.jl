@@ -13,7 +13,9 @@
     dates = basedate:Month(1):enddate
 
     ## Create individual types with same arrays: FullCPIBase, VarCPIBase, IndexCPIBase
-    fullcpi = FullCPIBase(ipc, v, w, dates, baseindex)
+    codes = "_" .* string.(1:GB)
+    names = "GB" .* string.(1:GB)
+    fullcpi = FullCPIBase(ipc, v, w, dates, baseindex, codes, names)
     vcpi = VarCPIBase(v, w, dates, baseindex)
     indexcpi = IndexCPIBase(ipc, w, dates, baseindex)
 
@@ -55,7 +57,7 @@
     ## Create types with different base indexes
     baseindex = rand(100:0.5:110, GB)
 
-    fullcpi_b = FullCPIBase(ipc, v, w, dates, baseindex)
+    fullcpi_b = FullCPIBase(ipc, v, w, dates, baseindex, codes, names)
     vcpi_b = VarCPIBase(fullcpi_b)
     indexcpi_b = IndexCPIBase(vcpi_b)
 
