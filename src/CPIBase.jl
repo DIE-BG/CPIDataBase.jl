@@ -343,7 +343,7 @@ end
 function summary(io::IO, base::AbstractCPIBase)
     field = hasproperty(base, :v) ? :v : :ipc
     periods, ngoods = size(getproperty(base, field))
-    print(io, typeof(base), ": ", periods, " períodos × ", ngoods, " gastos básicos ")
+    print(io, typeof(base), ": ", periods, " periods × ", ngoods, " products ")
     datestart, dateend = _formatdate.((first(base.dates), last(base.dates)))
     print(io, datestart, "-", dateend)
     # print(io, "└─→ ", propertynames(base))
@@ -355,9 +355,9 @@ function show(io::IO, base::Union{VarCPIBase, IndexCPIBase})
     field = hasproperty(base, :v) ? :v : :ipc
     pretty_table(io, getproperty(base, field); 
         cell_first_line_only = true,
-        row_names = base.dates, 
+        row_labels = base.dates, 
+        row_label_column_title = "Dates",
         show_row_number = true, 
-        row_name_column_title = "Dates",
         header = (1:length(base.w), base.w), 
         crop = :both,
         vcrop_mode = :middle,
@@ -369,9 +369,9 @@ function show(io::IO, base::FullCPIBase)
     summary(io, base)
     println(io)
     pretty_table(io, base.ipc; 
-        row_names = base.dates, 
+        row_labels = base.dates, 
+        row_label_column_title = "Dates",
         show_row_number = true, 
-        row_name_column_title = "Dates",
         crop_subheader = true, 
         header = (base.codes, base.names, base.w), 
         crop = :both,

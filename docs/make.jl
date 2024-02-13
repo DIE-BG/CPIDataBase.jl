@@ -20,6 +20,7 @@ makedocs(;
         "API" => "API.md",
         "TestHelpers API" => "TestHelpers.md",
     ],
+    checkdocs=:none,
 )
 
 deploydocs(;
