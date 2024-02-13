@@ -1,23 +1,28 @@
-
 """
     Splice <: InflationFunction
 
-    Splice(inflfn1, inflfn2, date1, date2, name, tag)
+    Splice( inflfns... ; dates = [(date1, date2),(date3, date4),...]=nothing, name=nothing, tag=nothing)
 
 Función de inflación para empalmar dos funciones de inflación.
 Las fechas denotan el intervalo de transición
 """
-struct Splice <: InflationFunction
-    f::InflationFunction
-    g::InflationFunction
-    a::Date
-    b::Date
+struct Splice<: InflationFunction
+    f::Vector
+    dates::Union{Nothing, Vector{Tuple{Date, Date}}}
     name::Union{Nothing, String}
     tag::Union{Nothing, String}
 
-    function Splice(f::InflationFunction, g::InflationFunction, a::Date, b::Date, name=nothing, tag=nothing)
-        new(f, g, a, b, name, tag)
+    function Splice(f::Vector; dates::Union{Nothing,Vector{Tuple{Date, Date}}}=nothing, name=nothing, tag=nothing)
+        if !isnothing(dates)
+            length(f) == length(dates)+1 || throw(ArgumentError("número de fechas debe ser igual al número de funciones menos 1"))
+        end
+        new(f, dates, name, tag)
     end
+
+    function Splice(f...; dates::Union{Nothing,Vector{Tuple{Date, Date}}}=nothing, name=nothing, tag=nothing)
+        Splice([f...]; dates, name, tag)
+    end
+
 end
 
 
@@ -26,7 +31,7 @@ end
 function ramp_down(X::AbstractRange{T}, a::T, b::T) where T 
     A = min(a,b) 
     B = max(a,b)
-    [x<A ? 1 : A<=x<=B ? (findfirst( X .== x)-findfirst( X .== A))/(findfirst( X .== B)-findfirst( X .== A)) : 0 for x in X]
+    [x<=A ? 1 : A<x<=B ? 1 .- (findfirst( X .== x)-findfirst( X .== A))/(findfirst( X .== B)-findfirst( X .== A)) : 0 for x in X]
 end
 
 function ramp_up(X::AbstractRange{T}, a::T, b::T) where T 
@@ -45,14 +50,33 @@ end
 
 function (inflfn::Splice)(cs::CountryStructure, ::CPIVarInterm)
     f = inflfn.f
-    g = inflfn.g
-    a = inflfn.a
-    b = inflfn.b
+    dates = inflfn.dates
+    #length(f) == length(cs.base) || throw(ArgumentError("número de funciones a concatenar deber coincidir con número de bases"))
 
-    X = cpi_dates(cs)
-    F = ramp_down(X,a,b)
-    G = ramp_up(X,a,b)
-    OUT = (f(cs, CPIVarInterm())).*F .+ (g(cs, CPIVarInterm())) .* G 
+    # EN EL CASO QUE NO SE DESIGNE UN PERIODO DE TRANSICION SE CONCATENAN DIRECTAMENTE LAS VARIACIONES INTERMENSUALES
+    if isnothing(dates)
+        L = cumsum([periods(x) for x in cs.base])
+        LL = hcat(vcat([1],L[1:end-1].+1),L)
+        W = map(x->x(cs, CPIVarInterm()),f)
+        OUT = vcat([W[i][LL[i,1]:LL[i,2]] for i in 1:length(L)]...)
+    
+    # EN EL CASO QUE SE DESEA UNA TRANSICION GRADUAL EN VARIACIONES INTERMENSUALES SE CREAN
+    # "RAMPAS" DE "APAGADO" y "ENCENDIDO" 
+    else
+        X = cpi_dates(cs)
+        F = ramp_down(X,dates[1]...)
+        G = ramp_up(X,dates[1]...)
+        OUT = (f[1](cs, CPIVarInterm())).*F .+ (f[2](cs, CPIVarInterm())) .* G 
+
+        if length(dates)>= 2
+            for i in 2:length(dates)
+                F = CPIDataBase.ramp_down(X,dates[i]...)
+                G = CPIDataBase.ramp_up(X,dates[i]...)
+                OUT = OUT .* F 
+                OUT = OUT + f[i+1](cs,CPIVarInterm()) .* G
+            end
+        end
+    end
     convert(Array{eltype(cs)}, OUT) 
 end
 
@@ -67,84 +91,112 @@ function (inflfn::Splice)(cs::CountryStructure, ::CPIIndex)
     v_interm  
 end
 
+#### CON FECHA
+
+function (inflfn::Splice)(cs::CountryStructure, ::CPIVarInterm, date::Date)
+    f = inflfn.f
+    dates = inflfn.dates
+    #length(f) == length(cs.base) || throw(ArgumentError("número de funciones a concatenar deber coincidir con número de bases"))
+
+    # EN EL CASO QUE NO SE DESIGNE UN PERIODO DE TRANSICION SE CONCATENAN DIRECTAMENTE LAS VARIACIONES INTERMENSUALES
+    if isnothing(dates)
+        L = cumsum([periods(x) for x in cs.base])
+        LL = hcat(vcat([1],L[1:end-1].+1),L)
+        W = map(x->x(cs, CPIVarInterm(), date),f)
+        OUT = vcat([W[i][LL[i,1]:LL[i,2]] for i in 1:length(L)]...)
+    
+    # EN EL CASO QUE SE DESEA UNA TRANSICION GRADUAL EN VARIACIONES INTERMENSUALES SE CREAN
+    # "RAMPAS" DE "APAGADO" y "ENCENDIDO" 
+    else
+        X = cpi_dates(cs)
+        F = ramp_down(X,dates[1]...)
+        G = ramp_up(X,dates[1]...)
+        OUT = (f[1](cs, CPIVarInterm(), date)).*F .+ (f[2](cs, CPIVarInterm(), date)) .* G 
+
+        if length(dates)>= 2
+            for i in 2:length(dates)
+                F = CPIDataBase.ramp_down(X,dates[i]...)
+                G = CPIDataBase.ramp_up(X,dates[i]...)
+                OUT = OUT .* F 
+                OUT = OUT + f[i+1](cs,CPIVarInterm(), date) .* G
+            end
+        end
+    end
+    convert(Array{eltype(cs)}, OUT) 
+end
+
+function (inflfn::Splice)(cs::CountryStructure, date::Date)
+    cpi_index = inflfn(cs, CPIIndex(), date)
+    varinteran(cpi_index)
+end
+
+function (inflfn::Splice)(cs::CountryStructure, ::CPIIndex, date::Date)
+    v_interm = inflfn(cs, CPIVarInterm(), date::Date)
+    capitalize!(v_interm, 100) 
+    v_interm  
+end
+
+############################################################################# 
+## FUNCIONES ADICIONALES
+##############################################################################
+
 function measure_name(inflfn::Splice)
     isnothing(inflfn.name) || return inflfn.name
-    measure_name(inflfn.f)*" -> "*measure_name(inflfn.g)
+    string((measure_name.(inflfn.f).*"--")...)[1:end-4]
 end
 
 function measure_tag(inflfn::Splice)
     isnothing(inflfn.tag) || return inflfn.tag
-    measure_tag(inflfn.f)*" -> "*measure_tag(inflfn.g)
+    string((measure_tag.(inflfn.f).*"--")...)[1:end-4]
 end
 
 function splice_length(inflfn::InflationFunction)
     if !(inflfn isa Splice)
         return 1
     else 
-        n = 0
-        for x in [inflfn.f, inflfn.g]
-            n += splice_length(x)
-        end
-        return n
+        return length(inflfn.f)
     end
 end
 
-
-function splice_inflfns(inflfn::InflationFunction, n=nothing)
+function splice_inflfns(inflfn::InflationFunction)
     if !(inflfn isa Splice)
         return inflfn
-    else 
-        OUT = []
-        x = [inflfn.f, inflfn.g]
-        append!(OUT,splice_inflfns.(x))
-        OUT = reduce(vcat, OUT)
-        isnothing(n) || return OUT[n]
-        OUT
-    end
-end
-
-function splice_inflfns_types(inflfn::InflationFunction, n=nothing)
-    if !(inflfn isa Splice)
-        return typeof(inflfn)
-    else 
-        OUT = []
-        x = [inflfn.f, inflfn.g]
-        append!(OUT,splice_inflfns_types.(x))
-        OUT = reduce(vcat, OUT)
-        isnothing(n) || return OUT[n]
-        OUT
-    end
+    else
+        return inflfn.f
+    end 
 end
 
 function splice_dates(inflfn::InflationFunction)
     if !(inflfn isa Splice)
         return NaN
     end
-    OUT = [] 
-    if !(inflfn.f isa Splice) & !(inflfn.g isa Splice)
-        append!(OUT,[NaN,[inflfn.a, inflfn.b]])
-    elseif (inflfn.f isa Splice) & !(inflfn.g isa Splice)
-        append!(OUT, [splice_dates(inflfn.f)..., [inflfn.a, inflfn.b]])
-    elseif !(inflfn.f isa Splice) & (inflfn.g isa Splice)
-        append!(OUT, [[inflfn.a, inflfn.b], splice_dates(inflfn.g)...])
-    elseif (inflfn.f isa Splice) & (inflfn.g isa Splice)
-        append!(OUT, [splice_dates(inflfn.f)..., splice_dates(inflfn.g)...])
-    end
-    OUT
-end
-
-function splice_measure_name(inflfn::InflationFunction, n=nothing)
-    return measure_name.(splice_inflfns(inflfn,n))
-end
-
-function splice_measure_tag(inflfn::InflationFunction, n=nothing)
-    return measure_tag.(splice_inflfns(inflfn,n))
+    return inflfn.dates
 end
 
 function components(inflfn::Splice)
-    components = DataFrame(
-        measure = splice_measure_name(inflfn),
-        dates = splice_dates(inflfn)
-    )
+    if isnothing(inflfn.dates)
+        if inflfn.f isa Vector{CombinationFunction{A,B}} where A where B
+            components = [
+                DataFrame(
+                    measure = measure_name.(x.ensemble),
+                    weights = x.weights
+                ) 
+                for x in inflfn.f]
+            #D = hcat([ hcat([measure_name(y.f[i]) for y in inflfn.f[i].ensemble.functions],inflfn.f[i].weights) for i in 1:length(inflfn.f)]...)
+            #cols = vcat([[measure_name(x),measure_tag(x)*"_w"] for x in inflfn.f]...)
+            #f(x::CombinationFunction) = DataFrame([measure_name(x, return_array=true),x.weights],[measure_name(x),measure_tag(x)*"_w"])
+            #components = hcat(f.(inflfn.f)..., makeunique=true)
+            #components = DataFrame(D,cols)
+        else
+            components = DataFrame(
+                measure = measure_name.(inflfn.f)
+            )
+        end
+    else
+        components = DataFrame(
+            measure = measure_name.(inflfn.f),
+            dates = [NaN, inflfn.dates...]
+        )
+    end
     components
 end
