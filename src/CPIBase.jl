@@ -343,7 +343,7 @@ end
 function summary(io::IO, base::AbstractCPIBase)
     field = hasproperty(base, :v) ? :v : :ipc
     periods, ngoods = size(getproperty(base, field))
-    print(io, typeof(base), ": ", periods, " periods × ", ngoods, " products ")
+    print(io, typeof(base), ": ", periods, " periods × ", ngoods, " items ")
     datestart, dateend = _formatdate.((first(base.dates), last(base.dates)))
     print(io, datestart, "-", dateend)
     # print(io, "└─→ ", propertynames(base))
