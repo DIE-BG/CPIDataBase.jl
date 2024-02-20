@@ -141,13 +141,13 @@ function getindex(cst::CountryStructure, startdate::Date, finaldate::Date)
         if final_base - start_base > 1
             # more than one base
             @debug "Más de dos bases"
-            newbases = (newstart, bases[start_base+1:final_base-1], newfinal)
+            newbases = (newstart, bases[start_base+1:final_base-1]..., newfinal)
         else
             # only two bases
             @debug "Dos bases"
             newbases = (newstart, newfinal)
-            return getunionalltype(cst)(newbases)
         end
+        return getunionalltype(cst)(newbases)
     end
 
 end
