@@ -6,91 +6,91 @@ countrydata</code></pre><pre class="documenter-example-output"><code class="nohi
 └─→ VarCPIBase{Float32, Float32}: 120 periods × 218 items Jan-01-Dec-10
 └─→ VarCPIBase{Float32, Float32}: 120 periods × 279 items Jan-11-Dec-20
 </code></pre><p>Este contenedor posee los datos del IPC de Macronia de las últimas dos décadas. Está dividido en dos estructuras de datos denominadas <a href="API/#CPIDataBase.VarCPIBase"><code>VarCPIBase</code></a>. Cada estructura contiene las variaciones intermensuales de los números índices de precios de los gastos básicos individuales del IPC de Macronia. A su vez, el IPC de Macronia está dividido históricamente en dos bases del IPC, cada una conlleva una  metodología diferente, con diferentes gastos básicos y ponderaciones en la canasta de consumo: </p><p>Por ejemplo, estos son los datos históricos de Macronia en la década del 2000: </p><pre><code class="language-julia hljs">countrydata[1]</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">VarCPIBase{Float32, Float32}: 120 periods × 218 items Jan-01-Dec-10
-┌─────┬────────────┬──────────┬──────────┬───────────┬──────────┬───────────┬───
-│<span class="sgr1"> Row </span>│<span class="sgr1">      Dates </span>│<span class="sgr1">        1 </span>│<span class="sgr1">        2 </span>│<span class="sgr1">         3 </span>│<span class="sgr1">        4 </span>│<span class="sgr1">         5 </span>│<span class="sgr1"> </span> ⋯
-│     │<span class="sgr1">            </span>│<span class="sgr90"> 0.172193 </span>│<span class="sgr90"> 0.343179 </span>│<span class="sgr90"> 0.0936188 </span>│<span class="sgr90"> 0.247413 </span>│<span class="sgr90"> 0.0839766 </span>│<span class="sgr90"> </span> ⋯
-├─────┼────────────┼──────────┼──────────┼───────────┼──────────┼───────────┼───
-│   1 │<span class="sgr1"> 2001-01-01 </span>│   0.2653 │   0.0727 │    0.3197 │   0.1505 │    0.3441 │  ⋯
-│   2 │<span class="sgr1"> 2001-02-01 </span>│   0.1528 │   0.4741 │    0.0092 │   0.2001 │    0.1422 │  ⋯
-│   3 │<span class="sgr1"> 2001-03-01 </span>│   0.2542 │   0.1284 │    0.0916 │   0.0490 │    0.3767 │  ⋯
-│   4 │<span class="sgr1"> 2001-04-01 </span>│   0.1348 │   0.1177 │    0.1532 │   0.1146 │    0.3309 │  ⋯
-│   5 │<span class="sgr1"> 2001-05-01 </span>│   0.1788 │   0.0253 │    0.3802 │   0.4466 │    0.4153 │  ⋯
-│   6 │<span class="sgr1"> 2001-06-01 </span>│   0.1851 │   0.0960 │    0.0076 │   0.3688 │    0.0564 │  ⋯
-│   7 │<span class="sgr1"> 2001-07-01 </span>│   0.3942 │   0.4901 │    0.4011 │   0.2207 │    0.3749 │  ⋯
-│   8 │<span class="sgr1"> 2001-08-01 </span>│   0.4970 │   0.3013 │    0.4134 │   0.4046 │    0.2370 │  ⋯
-│  ⋮  │     ⋮      │    ⋮     │    ⋮     │     ⋮     │    ⋮     │     ⋮     │  ⋱
-│ 114 │<span class="sgr1"> 2010-06-01 </span>│   0.3327 │   0.0295 │    0.1168 │   0.4712 │    0.0659 │  ⋯
-│ 115 │<span class="sgr1"> 2010-07-01 </span>│   0.0531 │   0.2309 │    0.2534 │   0.2279 │    0.3950 │  ⋯
-│ 116 │<span class="sgr1"> 2010-08-01 </span>│   0.1901 │   0.1953 │    0.0807 │   0.2337 │    0.2052 │  ⋯
-│ 117 │<span class="sgr1"> 2010-09-01 </span>│   0.3007 │   0.3629 │    0.3141 │   0.1697 │    0.4918 │  ⋯
-│ 118 │<span class="sgr1"> 2010-10-01 </span>│   0.4280 │   0.2382 │    0.1541 │   0.2729 │    0.4285 │  ⋯
-│ 119 │<span class="sgr1"> 2010-11-01 </span>│   0.3311 │   0.3091 │    0.1545 │   0.1565 │    0.4257 │  ⋯
-│ 120 │<span class="sgr1"> 2010-12-01 </span>│   0.3327 │   0.2162 │    0.4442 │   0.2314 │    0.0255 │  ⋯
-└─────┴────────────┴──────────┴──────────┴───────────┴──────────┴───────────┴───
+┌─────┬────────────┬─────────┬───────────┬──────────┬──────────┬──────────┬─────
+│<span class="sgr1"> Row </span>│<span class="sgr1">      Dates </span>│<span class="sgr1">       1 </span>│<span class="sgr1">         2 </span>│<span class="sgr1">        3 </span>│<span class="sgr1">        4 </span>│<span class="sgr1">        5 </span>│<span class="sgr1">   </span> ⋯
+│     │<span class="sgr1">            </span>│<span class="sgr90"> 0.88366 </span>│<span class="sgr90"> 0.0936008 </span>│<span class="sgr90"> 0.328051 </span>│<span class="sgr90"> 0.021944 </span>│<span class="sgr90"> 0.631176 </span>│<span class="sgr90"> 0.</span> ⋯
+├─────┼────────────┼─────────┼───────────┼──────────┼──────────┼──────────┼─────
+│   1 │<span class="sgr1"> 2001-01-01 </span>│  0.2057 │    0.3539 │   0.0663 │   0.3506 │   0.4472 │    ⋯
+│   2 │<span class="sgr1"> 2001-02-01 </span>│  0.1574 │    0.4852 │   0.3654 │   0.0048 │   0.2797 │    ⋯
+│   3 │<span class="sgr1"> 2001-03-01 </span>│  0.2906 │    0.2939 │   0.2867 │   0.2912 │   0.1226 │    ⋯
+│   4 │<span class="sgr1"> 2001-04-01 </span>│  0.0500 │    0.0821 │   0.3369 │   0.2250 │   0.2326 │    ⋯
+│   5 │<span class="sgr1"> 2001-05-01 </span>│  0.0467 │    0.0360 │   0.0265 │   0.3087 │   0.0837 │    ⋯
+│   6 │<span class="sgr1"> 2001-06-01 </span>│  0.3299 │    0.0457 │   0.4604 │   0.2501 │   0.4596 │    ⋯
+│   7 │<span class="sgr1"> 2001-07-01 </span>│  0.2463 │    0.3263 │   0.2689 │   0.2396 │   0.0754 │    ⋯
+│   8 │<span class="sgr1"> 2001-08-01 </span>│  0.0155 │    0.0428 │   0.4086 │   0.0160 │   0.1029 │    ⋯
+│  ⋮  │     ⋮      │    ⋮    │     ⋮     │    ⋮     │    ⋮     │    ⋮     │    ⋱
+│ 114 │<span class="sgr1"> 2010-06-01 </span>│  0.4030 │    0.2049 │   0.0272 │   0.4195 │   0.3317 │    ⋯
+│ 115 │<span class="sgr1"> 2010-07-01 </span>│  0.3712 │    0.3751 │   0.0134 │   0.0372 │   0.3062 │    ⋯
+│ 116 │<span class="sgr1"> 2010-08-01 </span>│  0.1479 │    0.1586 │   0.1357 │   0.2474 │   0.1160 │    ⋯
+│ 117 │<span class="sgr1"> 2010-09-01 </span>│  0.2658 │    0.1617 │   0.2902 │   0.2922 │   0.0287 │    ⋯
+│ 118 │<span class="sgr1"> 2010-10-01 </span>│  0.3996 │    0.0515 │   0.2972 │   0.1358 │   0.3422 │    ⋯
+│ 119 │<span class="sgr1"> 2010-11-01 </span>│  0.2754 │    0.4069 │   0.2840 │   0.4003 │   0.4516 │    ⋯
+│ 120 │<span class="sgr1"> 2010-12-01 </span>│  0.1796 │    0.1005 │   0.4058 │   0.0538 │   0.1537 │    ⋯
+└─────┴────────────┴─────────┴───────────┴──────────┴──────────┴──────────┴─────
 <span class="sgr36">                                                213 columns and 105 rows omitted</span>
 </code></pre><p>Y estos son los datos históricos de Macronia en la década del 2010: </p><pre><code class="language-julia hljs">countrydata[2]</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">VarCPIBase{Float32, Float32}: 120 periods × 279 items Jan-11-Dec-20
 ┌─────┬────────────┬──────────┬──────────┬──────────┬──────────┬──────────┬─────
 │<span class="sgr1"> Row </span>│<span class="sgr1">      Dates </span>│<span class="sgr1">        1 </span>│<span class="sgr1">        2 </span>│<span class="sgr1">        3 </span>│<span class="sgr1">        4 </span>│<span class="sgr1">        5 </span>│<span class="sgr1">   </span> ⋯
-│     │<span class="sgr1">            </span>│<span class="sgr90"> 0.612763 </span>│<span class="sgr90"> 0.657977 </span>│<span class="sgr90"> 0.191628 </span>│<span class="sgr90"> 0.111832 </span>│<span class="sgr90"> 0.689351 </span>│<span class="sgr90"> 0.</span> ⋯
+│     │<span class="sgr1">            </span>│<span class="sgr90"> 0.406128 </span>│<span class="sgr90"> 0.309214 </span>│<span class="sgr90"> 0.244722 </span>│<span class="sgr90"> 0.352168 </span>│<span class="sgr90"> 0.458199 </span>│<span class="sgr90"> 0.</span> ⋯
 ├─────┼────────────┼──────────┼──────────┼──────────┼──────────┼──────────┼─────
-│   1 │<span class="sgr1"> 2011-01-01 </span>│   0.1437 │   0.4266 │   0.0490 │   0.1018 │   0.0005 │  0 ⋯
-│   2 │<span class="sgr1"> 2011-02-01 </span>│   0.0606 │   0.2043 │   0.1976 │   0.0200 │   0.0026 │  0 ⋯
-│   3 │<span class="sgr1"> 2011-03-01 </span>│   0.2301 │   0.4811 │   0.0400 │   0.1381 │   0.3039 │  0 ⋯
-│   4 │<span class="sgr1"> 2011-04-01 </span>│   0.2547 │   0.1029 │   0.2229 │   0.0647 │   0.0649 │  0 ⋯
-│   5 │<span class="sgr1"> 2011-05-01 </span>│   0.2208 │   0.3944 │   0.1558 │   0.2384 │   0.4772 │  0 ⋯
-│   6 │<span class="sgr1"> 2011-06-01 </span>│   0.4212 │   0.2727 │   0.3077 │   0.2154 │   0.3303 │  0 ⋯
-│   7 │<span class="sgr1"> 2011-07-01 </span>│   0.2866 │   0.4314 │   0.4634 │   0.2540 │   0.3505 │  0 ⋯
-│   8 │<span class="sgr1"> 2011-08-01 </span>│   0.3034 │   0.1535 │   0.1643 │   0.4458 │   0.3665 │  0 ⋯
+│   1 │<span class="sgr1"> 2011-01-01 </span>│   0.1286 │   0.0238 │   0.0487 │   0.0038 │   0.1817 │    ⋯
+│   2 │<span class="sgr1"> 2011-02-01 </span>│   0.2874 │   0.2883 │   0.3742 │   0.4593 │   0.3186 │    ⋯
+│   3 │<span class="sgr1"> 2011-03-01 </span>│   0.1747 │   0.2567 │   0.0170 │   0.3089 │   0.1633 │    ⋯
+│   4 │<span class="sgr1"> 2011-04-01 </span>│   0.0826 │   0.1257 │   0.0801 │   0.0836 │   0.2689 │    ⋯
+│   5 │<span class="sgr1"> 2011-05-01 </span>│   0.1760 │   0.2657 │   0.0543 │   0.1244 │   0.0682 │    ⋯
+│   6 │<span class="sgr1"> 2011-06-01 </span>│   0.1588 │   0.4567 │   0.4955 │   0.4906 │   0.0853 │    ⋯
+│   7 │<span class="sgr1"> 2011-07-01 </span>│   0.3070 │   0.2844 │   0.4018 │   0.4235 │   0.0621 │    ⋯
+│   8 │<span class="sgr1"> 2011-08-01 </span>│   0.2782 │   0.0227 │   0.3879 │   0.4449 │   0.0462 │    ⋯
 │  ⋮  │     ⋮      │    ⋮     │    ⋮     │    ⋮     │    ⋮     │    ⋮     │    ⋱
-│ 114 │<span class="sgr1"> 2020-06-01 </span>│   0.4511 │   0.2233 │   0.1119 │   0.3454 │   0.4274 │  0 ⋯
-│ 115 │<span class="sgr1"> 2020-07-01 </span>│   0.2918 │   0.1393 │   0.3767 │   0.1410 │   0.1874 │  0 ⋯
-│ 116 │<span class="sgr1"> 2020-08-01 </span>│   0.3761 │   0.2453 │   0.0815 │   0.1508 │   0.1011 │  0 ⋯
-│ 117 │<span class="sgr1"> 2020-09-01 </span>│   0.1291 │   0.2498 │   0.4331 │   0.2364 │   0.4566 │  0 ⋯
-│ 118 │<span class="sgr1"> 2020-10-01 </span>│   0.1620 │   0.4066 │   0.3967 │   0.0661 │   0.0828 │  0 ⋯
-│ 119 │<span class="sgr1"> 2020-11-01 </span>│   0.0604 │   0.0599 │   0.3198 │   0.1317 │   0.1669 │  0 ⋯
-│ 120 │<span class="sgr1"> 2020-12-01 </span>│   0.2731 │   0.4744 │   0.0233 │   0.0119 │   0.1531 │  0 ⋯
+│ 114 │<span class="sgr1"> 2020-06-01 </span>│   0.2789 │   0.0756 │   0.1863 │   0.4010 │   0.0967 │    ⋯
+│ 115 │<span class="sgr1"> 2020-07-01 </span>│   0.4573 │   0.0168 │   0.2429 │   0.4330 │   0.0409 │    ⋯
+│ 116 │<span class="sgr1"> 2020-08-01 </span>│   0.1688 │   0.1295 │   0.1091 │   0.0476 │   0.2084 │    ⋯
+│ 117 │<span class="sgr1"> 2020-09-01 </span>│   0.0074 │   0.2632 │   0.1422 │   0.4118 │   0.0037 │    ⋯
+│ 118 │<span class="sgr1"> 2020-10-01 </span>│   0.1489 │   0.1827 │   0.0700 │   0.4931 │   0.4293 │    ⋯
+│ 119 │<span class="sgr1"> 2020-11-01 </span>│   0.3958 │   0.2764 │   0.3071 │   0.0632 │   0.4114 │    ⋯
+│ 120 │<span class="sgr1"> 2020-12-01 </span>│   0.4419 │   0.1322 │   0.0124 │   0.3727 │   0.1932 │    ⋯
 └─────┴────────────┴──────────┴──────────┴──────────┴──────────┴──────────┴─────
 <span class="sgr36">                                                274 columns and 105 rows omitted</span>
 </code></pre><p>Vea la documentación de <a href="API/#CPIDataBase.FullCPIBase"><code>FullCPIBase</code></a> para conocer cómo crear la estructura de datos del IPC necesaria. Los datos de un <a href="API/#CPIDataBase.FullCPIBase"><code>FullCPIBase</code></a> pueden ser convertidos a un <a href="API/#CPIDataBase.VarCPIBase"><code>VarCPIBase</code></a>. La estructura principal de datos de este paquete es un contenedor de tipo <a href="API/#CPIDataBase.CountryStructure"><code>CountryStructure</code></a>, el cual permite realizar cómputos de diferentes metodologías de inflación. </p><h2 id="Cómputo-del-IPC"><a class="docs-heading-anchor" href="#Cómputo-del-IPC">Cómputo del IPC</a><a id="Cómputo-del-IPC-1"></a><a class="docs-heading-anchor-permalink" href="#Cómputo-del-IPC" title="Permalink"></a></h2><p>Con la estructura <code>countrydata</code> es posible computar el Índice de Precios al Consumidor encadenado automáticamente entre las dos bases del IPC: </p><pre><code class="language-julia hljs">inflfn = InflationTotalCPI()
 inflfn(countrydata, CPIIndex())</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">240-element Vector{Float32}:
- 100.24562
- 100.485245
- 100.731316
- 100.9966
- 101.255486
- 101.505936
- 101.76292
- 101.99057
- 102.24019
- 102.51624
+ 100.25816
+ 100.51125
+ 100.75165
+ 101.00897
+ 101.25967
+ 101.50572
+ 101.73928
+ 102.00426
+ 102.25756
+ 102.5213
    ⋮
- 178.52713
- 178.99619
- 179.4488
- 179.89218
- 180.36266
- 180.84122
- 181.27408
- 181.70834
- 182.1647</code></pre><p>En este ejemplo, la variable <code>inflfn</code> denota una &quot;función de inflación&quot;. Utilizando diferentes funciones de inflación podemos computar diferentes medidas de inflación con los datos desagregados del IPC. Por ejemplo, el siguiente código computa la variación interanual del IPC, ampliamente utilizada como una medida de inflación en las economías del mundo: </p><pre><code class="language-julia hljs">inflfn = InflationTotalCPI()
+ 178.71107
+ 179.176
+ 179.66798
+ 180.08415
+ 180.51271
+ 180.96722
+ 181.4148
+ 181.81494
+ 182.29674</code></pre><p>En este ejemplo, la variable <code>inflfn</code> denota una &quot;función de inflación&quot;. Utilizando diferentes funciones de inflación podemos computar diferentes medidas de inflación con los datos desagregados del IPC. Por ejemplo, el siguiente código computa la variación interanual del IPC, ampliamente utilizada como una medida de inflación en las economías del mundo: </p><pre><code class="language-julia hljs">inflfn = InflationTotalCPI()
 inflfn(countrydata)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">229-element Vector{Float32}:
- 3.027606
- 3.0248165
- 3.053391
- 3.0672789
- 3.0413508
- 3.0483723
- 3.0637026
- 3.0674934
- 3.0846715
- 3.0954838
+ 3.0511498
+ 3.0516386
+ 3.0359268
+ 3.049636
+ 3.028679
+ 3.0164719
+ 3.0441642
+ 3.0489326
+ 3.0302644
+ 3.0286312
  ⋮
- 3.1136036
- 3.1418562
- 3.12953
- 3.1184196
- 3.115499
- 3.12047
- 3.1030297
- 3.0921936
- 3.0935168</code></pre></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="CPITrees/">Estructura jerárquica del IPC »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="auto">Automatic (OS)</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.2.1 on <span class="colophon-date" title="Tuesday 13 February 2024 21:18">Tuesday 13 February 2024</span>. Using Julia version 1.8.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+ 3.071034
+ 3.055036
+ 3.0841947
+ 3.069222
+ 3.0548215
+ 3.0282974
+ 3.0205965
+ 2.9696584
+ 3.000772</code></pre></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="CPITrees/">Estructura jerárquica del IPC »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="auto">Automatic (OS)</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.2.1 on <span class="colophon-date" title="Tuesday 20 February 2024 15:59">Tuesday 20 February 2024</span>. Using Julia version 1.8.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
