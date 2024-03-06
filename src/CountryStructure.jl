@@ -217,7 +217,15 @@ infl_periods(cst::CountryStructure) = periods(cst) - 11
 
 
 """
-    infl_periods(cst::CountryStructure)
+    index_dates(cst::CountryStructure)
+
+Fechas correspondientes a los números índices asociados a un `CountryStructure`.
+"""
+index_dates(cst::CountryStructure) = 
+    first(cst.base).dates[1]:Month(1):last(cst.base).dates[end]
+
+"""
+    infl_dates(cst::CountryStructure)
 
 Fechas correspondientes a la trayectorias de inflación computadas a partir un
 `CountryStructure`.
