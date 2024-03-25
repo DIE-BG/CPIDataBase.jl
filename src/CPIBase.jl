@@ -356,7 +356,7 @@ function show(io::IO, base::Union{VarCPIBase, IndexCPIBase})
     pretty_table(io, getproperty(base, field); 
         cell_first_line_only = true,
         row_labels = base.dates, 
-        row_label_column_title = "Dates",
+        row_label_column_title = "Date",
         show_row_number = true, 
         header = (1:length(base.w), base.w), 
         crop = :both,
@@ -370,7 +370,7 @@ function show(io::IO, base::FullCPIBase)
     println(io)
     pretty_table(io, base.ipc; 
         row_labels = base.dates, 
-        row_label_column_title = "Dates",
+        row_label_column_title = "Date",
         show_row_number = true, 
         crop_subheader = true, 
         header = (base.codes, base.names, base.w), 
@@ -381,8 +381,24 @@ function show(io::IO, base::FullCPIBase)
 end
 
 """
-    periods(base::VarCPIBase)
+    periods(base::AbstractCPIBase)
 
-Computa el número de períodos (meses) en las base de variaciones intermensuales. 
+Computa el número de períodos (meses) en las base de datos.
 """
-periods(base::VarCPIBase) = size(base.v, 1)
+function periods(base::AbstractCPIBase)
+    field = hasproperty(base, :v) ? :v : :ipc
+    periods = size(getproperty(base, field), 1)
+    periods
+end
+
+
+"""
+    items(base::AbstractCPIBase)
+
+Computa el número de productos en las base de datos.
+"""
+function items(base::AbstractCPIBase)
+    field = hasproperty(base, :v) ? :v : :ipc
+    ngoods = size(getproperty(base, field), 2)
+    ngoods
+end
