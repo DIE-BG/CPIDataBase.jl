@@ -487,7 +487,7 @@ end
 
 
 function Base.show(io::IO, cpitree::CPITree)
-    println(io, typeof(cpitree), " con datos")
+    println(io, typeof(cpitree), " with data:")
     println(io, "└─→ ", sprint(summary, cpitree.base)) 
     print_tree(io, cpitree.tree)
 end
@@ -499,8 +499,8 @@ Este método se utiliza para indexar el árbol jerárquico `cpitree` y obtener u
 estructura similar cuyo nodo superior sea el nodo con el código provisto `code`. Por ejemplo, si tenemos el siguiente árbol: 
 ```julia-repl
 julia> tree
-CPITree{Group{Group{Group{Group{Item{Float32}, Float32}, Float32}, Float32}, Float32}} con datos
-└─→ FullCPIBase{Float32, Float32}: 36 períodos × 10 gastos básicos Jan-01-Dec-03
+CPITree{Group{Group{Group{Group{Item{Float32}, Float32}, Float32}, Float32}, Float32}} with data: 
+└─→ FullCPIBase{Float32, Float32}: 36 periods × 10 items Jan-01-Dec-03
 _0: IPC [100.0]
 ├─ _01: Div._01 [21.491905]
 │  └─ _011: Agr._011 [21.491905]
@@ -535,7 +535,7 @@ Al indexar por un código, como `_041`, obtenemos una estructura similar a parti
 ```julia-repl
 julia> tree["_041"]
 CPITree{Group{Group{Item{Float32}, Float32}, Float32}} con datos
-└─→ FullCPIBase{Float32, Float32}: 36 períodos × 10 gastos básicos Jan-01-Dec-03
+└─→ FullCPIBase{Float32, Float32}: 36 periods × 10 items Jan-01-Dec-03
 _041: Agr._041 [63.769615]
 ├─ _0411: Subgr._0411 [16.103952]
 │  └─ _041101: Item G [16.103952] 
@@ -562,7 +562,7 @@ nodo no se encuentra en el árbol, devuelve `nothing`.
 ```julia-repl
 julia> tree
 CPITree{Group{Group{Group{Group{Item{Float32}, Float32}, Float32}, Float32}, Float32}} con datos
-└─→ FullCPIBase{Float32, Float32}: 36 períodos × 10 gastos básicos Jan-01-Dec-03
+└─→ FullCPIBase{Float32, Float32}: 36 periods × 10 items Jan-01-Dec-03
 _0: IPC [100.0]
 ├─ _01: Div._01 [21.491905]
 │  └─ _011: Agr._011 [21.491905]
