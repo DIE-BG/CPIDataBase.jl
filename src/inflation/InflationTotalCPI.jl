@@ -14,7 +14,7 @@ measure_tag(::InflationTotalCPI) = "Total"
 function (inflfn::InflationTotalCPI)(base::VarCPIBase{T, T}) where {T <: AbstractFloat} 
     base_ipc = capitalize(base.v, base.baseindex)
     ipc = base_ipc * base.w / base.baseindex
-    varinterm!(ipc, ipc, 100)
+    varinterm!(ipc, ipc, base.baseindex)
     ipc
 end
 
@@ -27,7 +27,7 @@ function (inflfn::InflationTotalCPI)(base::VarCPIBase{T, B}) where {T <: Abstrac
     # Obtener índice base y normalizar a 100
     baseindex = base.baseindex' * base.w
     ipc = 100 * (base_ipc * base.w / baseindex)
-    varinterm!(ipc, ipc, 100)
+    varinterm!(ipc, ipc, base.baseindex)
     ipc
 end
 
