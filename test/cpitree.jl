@@ -5,12 +5,7 @@
     periods = 36
 
     ## Build a test FullCPIBase
-    varbase = getzerobase(
-        T_type = Float32, 
-        G = 10, 
-        T_periods = periods, 
-        startdate = Date(2001, 1)
-    )
+    varbase = getzerobase(Float32, 10, periods, Date(2001,1))
 
     # Codes with characters hierarchy defined by sequence (3, 4, 5, 7) 
     # Try several combinations
