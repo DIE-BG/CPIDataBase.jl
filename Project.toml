@@ -1,7 +1,7 @@
 name = "CPIDataBase"
 uuid = "bc2aee9a-d1f8-4cce-8750-9c1afc923989"
 authors = ["Rodrigo Chang and DIE-BG collaborators"]
-version = "0.6.19"
+version = "0.6.20"
 
 [deps]
 AbstractTrees = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"

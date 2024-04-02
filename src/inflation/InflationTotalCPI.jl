@@ -25,9 +25,9 @@ end
 function (inflfn::InflationTotalCPI)(base::VarCPIBase{T, B}) where {T <: AbstractFloat, B <: AbstractVector{T}} 
     base_ipc = capitalize(base.v, base.baseindex)
     # Obtener índice base y normalizar a 100
-    baseindex = base.baseindex' * base.w
-    ipc = 100 * (base_ipc * base.w / baseindex)
-    varinterm!(ipc, ipc, base.baseindex)
+    baseindex = base.baseindex' * base.w    # CPI index reference (scalar)
+    ipc = base_ipc * base.w                 # Vector with CPI
+    varinterm!(ipc, ipc, baseindex)         # Monthly change (in-place)
     ipc
 end
 
