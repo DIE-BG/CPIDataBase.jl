@@ -58,7 +58,7 @@ end
 function show(io::IO, cst::CountryStructure)
     l = length(cst.base)
     suffix = l == 1 ? " base" : " bases"
-    println(io, typeof(cst), " con ", l, suffix)
+    println(io, typeof(cst), " with ", l, suffix)
     for base in cst.base
         println(io, "└─→ ", sprint(summary, base))
     end
