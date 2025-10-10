@@ -1,3 +1,8 @@
+## [0.6.24]
+
+### Changed
+- Added the mean of all monthly price changes to the `show` method for the `VarCPIBase`, `IndexCPIBase`, and `FullCPIBase` objects to quickly inspect it in the REPL.
+
 ## [0.6.23]
 
 ### Fixed
