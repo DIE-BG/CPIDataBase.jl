@@ -52,3 +52,16 @@ En este ejemplo, la variable `inflfn` denota una "función de inflación". Utili
 inflfn = InflationTotalCPI()
 inflfn(countrydata)
 ```
+## Cómputo de la variaciones intermensuales
+
+Se puede formar un `DataFrame` con el índice, las varaiaciones intermensuales y la inflación para un estimador `inflfn`  dado. 
+```@example showcase-package
+using DataFrames
+df = DataFrame(  
+  dates     = index_dates(countrydata),
+  index     = inflfn(countrydata, CPIIndex()), 
+  momchange = inflfn(countrydata, CPIVarInterm()), 
+  yoychange = [missings(11); inflfn(countrydata)],
+)
+
+```

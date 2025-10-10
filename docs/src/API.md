@@ -36,12 +36,12 @@ Pages = ["CountryStructure.jl"]
 
 ```@index
 Modules = [CPIDataBase]
-Pages = ["InflationFunction.jl", "CombinationFunction.jl", "EnsembleFunction.jl", "InflationTotalCPI.jl"]
+Pages = ["InflationFunction.jl", "CombinationFunction.jl", "EnsembleFunction.jl", "InflationTotalCPI.jl", "Splice.jl"]
 ```
 
 ```@autodocs
 Modules = [CPIDataBase]
-Pages = ["InflationFunction.jl", "CombinationFunction.jl", "EnsembleFunction.jl", "InflationTotalCPI.jl"]
+Pages = ["InflationFunction.jl", "CombinationFunction.jl", "EnsembleFunction.jl", "InflationTotalCPI.jl", "Splice.jl"]
 ```
 
 ## Operaciones

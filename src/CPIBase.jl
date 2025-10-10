@@ -402,3 +402,8 @@ function items(base::AbstractCPIBase)
     ngoods = size(getproperty(base, field), 2)
     ngoods
 end
+
+## Funciones para obtener fechas
+index_dates(base::FullCPIBase) = base.dates
+index_dates(base::VarCPIBase) = base.dates
+index_dates(base::IndexCPIBase) = base.dates
