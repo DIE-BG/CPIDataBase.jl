@@ -346,7 +346,11 @@ function summary(io::IO, base::AbstractCPIBase)
     print(io, typeof(base), ": ", periods, " periods × ", ngoods, " items ")
     datestart, dateend = _formatdate.((first(base.dates), last(base.dates)))
     print(io, datestart, "-", dateend)
-    # print(io, "└─→ ", propertynames(base))
+    # Summarize values
+    datamatrix_ = getfield(base, field)
+    mean_ = Statistics.mean(datamatrix_)
+    summary_ = Printf.@sprintf("%0.4f", mean_)
+    print(io, " mean:" * summary_)
 end
 
 function show(io::IO, base::Union{VarCPIBase, IndexCPIBase})

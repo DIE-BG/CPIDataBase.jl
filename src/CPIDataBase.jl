@@ -9,6 +9,8 @@ module CPIDataBase
     using Dates
     using DataFrames
     using PrettyTables
+    import Printf
+    import Statistics
 
     # Exportar tipos
     export IndexCPIBase, VarCPIBase, FullCPIBase
