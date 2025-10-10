@@ -353,30 +353,33 @@ function show(io::IO, base::Union{VarCPIBase, IndexCPIBase})
     summary(io, base)
     println(io)
     field = hasproperty(base, :v) ? :v : :ipc
-    pretty_table(io, getproperty(base, field); 
-        cell_first_line_only = true,
-        row_labels = base.dates, 
-        row_label_column_title = "Date",
-        show_row_number = true, 
-        header = (1:length(base.w), base.w), 
-        crop = :both,
-        vcrop_mode = :middle,
-        formatters = ft_printf("%0.4f")
+    PrettyTables.pretty_table(
+        io, getproperty(base, field);
+        row_labels = base.dates,
+        stubhead_label = "Date",
+        show_row_number_column = true,
+        column_labels = [
+            ["$i" for i in 1:length(base.w)],
+            ["$(base.w[i])" for i in 1:length(base.w)]
+        ],
+        vertical_crop_mode = :middle,
+        formatters = [PrettyTables.fmt__printf("%0.4f")],
     )
 end
 
 function show(io::IO, base::FullCPIBase)
     summary(io, base)
     println(io)
-    pretty_table(io, base.ipc; 
-        row_labels = base.dates, 
-        row_label_column_title = "Date",
-        show_row_number = true, 
-        crop_subheader = true, 
-        header = (base.codes, base.names, base.w), 
-        crop = :both,
-        vcrop_mode = :middle,
-        formatters = ft_printf("%0.2f"),
+    PrettyTables.pretty_table(
+        io, base.ipc;
+        row_labels = base.dates,
+        stubhead_label = "Date",
+        show_row_number_column = true,
+        column_labels = [base.codes, base.names, base.w],
+        vertical_crop_mode = :middle,
+        formatters = [PrettyTables.fmt__printf("%0.2f")],
+        backend = :text,
+        column_label_width_based_on_first_line_only = true,
     )
 end
 
