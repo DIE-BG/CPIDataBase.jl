@@ -1,6 +1,6 @@
 name = "CPIDataBase"
 uuid = "bc2aee9a-d1f8-4cce-8750-9c1afc923989"
-version = "0.6.22"
+version = "0.6.24"
 authors = ["Rodrigo Chang and DIE-BG collaborators"]
 
 [deps]

@@ -26,4 +26,5 @@ makedocs(;
 deploydocs(;
     repo="github.com/DIE-BG/CPIDataBase.jl",
     devbranch="main",
+    push_preview=true,      # Deploy docs from PRs at PACKAGE.jl/previews/PR##
 )
