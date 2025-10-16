@@ -1,18 +1,5 @@
 """
-    abstract type InflationSpliceFunction <: InflationFunction 
-
-Tipo abstracto para representar las funciones de inflación que operan sobre
-[`CountryStructure`](@ref) y [`VarCPIBase`](@ref). 
-
-Permiten computar la medida de ritmo inflacionario interanual, el índice de precios
-dado por la metodología y las variaciones intermensuales del índice de precios,
-empalmando dos o más funciones de inflación, empalmando sus variaciones intermensuales
-de forma gradual a lo largo de un intervalo de fechas. 
-"""
-abstract type InflationSpliceFunction <: InflationFunction end
-
-"""
-    InflationSplice <: InflationSpliceFunction
+    InflationSplice <: InflationFunction
 
     InflationSplice(
         inflfns... ; 
@@ -21,10 +8,10 @@ abstract type InflationSpliceFunction <: InflationFunction end
         tag::Union{Nothing, String} = nothing
     )
 
-Función para empalmar los resultados de varias funciones de inflación a lo largo
-de intervalos de fechas de transición.
+Inflation Function for splicing the results of several inflation functions over
+transition date intervals.
 """
-struct InflationSplice
+struct InflationSplice <: InflationFunction
     f::Vector{<:InflationFunction}
     dates::Union{Nothing, Vector{Tuple{Date, Date}}}
     name::Union{Nothing, AbstractString}
@@ -37,10 +24,14 @@ struct InflationSplice
             tag::Union{Nothing, AbstractString} = nothing
         )
 
-        if dates !== nothing
-            length(f) == length(dates) + 1 ||
-                throw(ArgumentError("Debe haber una tupla de fechas por cada par de funciones de inflación a empalmar."))
+        # Asserting some properties of the input arguments
+        if isnothing(dates)
+            length(f) == 1 || throw(ArgumentError("If no date intervals are provided, there must be exactly one function."))
 
+        elseif !isnothing(dates)
+            length(f) == length(dates) + 1 ||
+                throw(ArgumentError("There must be one more function than date intervals."))
+            # validate if the dates are well ordered and non-overlapping
             _validate_dates(dates)
         end
 
@@ -60,20 +51,26 @@ struct InflationSplice
 end
 
 
-# FUNCIONES AUXILIARES
+# Helper functions
 
+"""
+    _validate_dates(dates::Vector{Tuple{Date, Date}})
 
+This helper function validates that the input vector of date tuples meets the following criteria:
+1) Within each tuple: ini < fin
+2) Between consecutive tuples: fin[i] < ini[i+1]  (ascending temporal order and no overlap)
+"""
 function _validate_dates(dates::Vector{Tuple{Date, Date}})
     # 1) Dentro de cada tupla: ini < fin
     @inbounds for (ini, fin) in dates
-        ini < fin || throw(ArgumentError("Cada tupla debe cumplir ini < fin; recibida ($ini, $fin)."))
+        ini < fin || throw(ArgumentError("Each tuple must satisfy ini < fin; received ($ini, $fin)."))
     end
     # 2) Entre tuplas consecutivas: fin[i] < ini[i+1]  (orden temporal ascendente y sin solape)
     @inbounds for i in firstindex(dates):(lastindex(dates) - 1)
         dates[i][2] < dates[i + 1][1] ||
             throw(
             ArgumentError(
-                "Intervalos solapados o desordenados entre $i y $(i + 1): " *
+                "Overlapping or unordered intervals between $i and $(i + 1): " *
                     "$(dates[i][2]) vs $(dates[i + 1][1])."
             )
         )
@@ -81,14 +78,83 @@ function _validate_dates(dates::Vector{Tuple{Date, Date}})
     return nothing
 end
 
-function ramp_down(X::AbstractRange{T}, a::T, b::T) where {T}
+
+"""
+    ramp_down(X::AbstractRange{<:Real}, a::Real, b::Real)
+
+Generates a "ramp down" weight vector over the range X, transitioning from 1 to 0
+between points a and b. For values in X less than or equal to a, the weight
+is 1; for values greater than or equal to b, the weight is 0; and for values
+within the interval (a, b), the weight decreases linearly from 1 to 0.
+"""
+function ramp_down(X::AbstractRange{<:Real}, a::Real, b::Real)
+
+    # Starting point of the ramp
     A = min(a, b)
+    # Ending point of the ramp
     B = max(a, b)
-    return [x <= A ? 1 : A < x <= B ? 1 .- (findfirst(X .== x) - findfirst(X .== A)) / (findfirst(X .== B) - findfirst(X .== A)) : 0 for x in X]
+
+    # preallocate the output weight vector given the input range X
+    ramp_weights = Vector{Float64}(undef, length(X))
+
+    # walking through all elements in the range X
+    for (i, x) in enumerate(X)
+
+        # for all the values prior the starting point of the ramp, the weight is 1
+        if x <= A
+            ramp_weights[i] = 1
+
+            # for all the values within the ramp, the weight decreases linearly from 1 to 0
+        elseif A < x <= B
+            ramp_weights[i] = 1 .- (findfirst(X .== x) - findfirst(X .== A)) / (findfirst(X .== B) - findfirst(X .== A))
+
+            # for all the values after the ending point of the ramp, the weight is 0
+        else
+            ramp_weights[i] = 0
+        end
+    end
+    return ramp_weights
 end
 
-function ramp_up(X::AbstractRange{T}, a::T, b::T) where {T}
-    return 1 .- ramp_down(X::AbstractRange{T}, a::T, b::T)
+
+"""
+    ramp_down(X::StepRange{Date, T}, a::Date, b::Date) where {T <: Period}
+
+Generates a "ramp down" weight vector over the date range X, transitioning from 1 to 0
+between dates a and b. For dates in X less than or equal to a, the weight
+is 1; for dates greater than or equal to b, the weight is 0; and for dates
+within the interval (a, b), the weight decreases linearly from 1 to 0.
+"""
+function ramp_down(X::StepRange{Date, T}, a::Date, b::Date) where {T <: Period}
+    # constructing a int range from the date range
+    X_int = 1:length(X)
+    a = findfirst(X .== a)
+    b = findfirst(X .== b)
+    return ramp_down(X_int, a, b)
+end
+
+
+"""
+    ramp_up(X::AbstractRange{<:Real}, a::Real, b::Real)
+Generates a "ramp up" weight vector over the range X, transitioning from 0 to 1
+between points a and b. For values in X less than or equal to a, the weight
+is 0; for values greater than or equal to b, the weight is 1; and for values
+within the interval (a, b), the weight increases linearly from 0 to 1.
+"""
+function ramp_up(X::AbstractRange{<:Real}, a::Real, b::Real)
+    return 1 .- ramp_down(X, a, b)
+end
+
+
+"""
+    ramp_up(X::StepRange{Date, T}, a::Date, b::Date) where {T <: Period}
+Generates a "ramp up" weight vector over the date range X, transitioning from 0 to 1
+between dates a and b. For dates in X less than or equal to a, the weight
+is 0; for dates greater than or equal to b, the weight is 1; and for dates
+within the interval (a, b), the weight increases linearly from 0 to 1.
+"""
+function ramp_up(X::StepRange{Date, T}, a::Date, b::Date) where {T <: Period}
+    return 1 .- ramp_down(X, a, b)
 end
 
 """
