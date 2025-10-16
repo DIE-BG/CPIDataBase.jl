@@ -25,10 +25,7 @@ struct InflationSplice <: InflationFunction
         )
 
         # Asserting some properties of the input arguments
-        if isnothing(dates)
-            length(f) == 1 || throw(ArgumentError("If no date intervals are provided, there must be exactly one function."))
-
-        elseif !isnothing(dates)
+        if !isnothing(dates)
             length(f) == length(dates) + 1 ||
                 throw(ArgumentError("There must be one more function than date intervals."))
             # validate if the dates are well ordered and non-overlapping
@@ -80,6 +77,54 @@ end
 
 
 """
+    (inflfn::InflationSplice)(base::VarCPIBase)
+
+
+Evaluate the InflationSplice function on a given VarCPIBase `base`, returning the corresponding CPIVarInterm.
+
+Only those transition dates completely overlapped within the date range of `base` are considered.
+"""
+function (inflfn::InflationSplice)(base::VarCPIBase)
+    @assert !isnothing(inflfn.dates) "InflationSplice requires transition dates when applied to a single VarCPIBase."
+
+    #check the ranges in inflfn.dates denoted as rng = (ini, fin) are inside
+    # the range of base.dates. full overlap is required
+    _check_overlap(rng) = (base.dates[1] <= rng[1] <= base.dates[end]) &&
+        (base.dates[1] <= rng[2] <= base.dates[end])
+
+    # get the index of the ranges in inflfn.dates that fully overlap with base.dates
+    _mask_dates = findall(_check_overlap, inflfn.dates)
+
+    @assert !isempty(_mask_dates) "No transition date intervals overlap with the date range of the provided VarCPIBase."
+
+    # applying the splice in the first overlaped interval
+
+    F = ramp_down(
+        eltype(base), base.dates, inflfn.dates[_mask_dates[1]]...
+    )
+
+    G = ramp_up(
+        eltype(base), base.dates, inflfn.dates[_mask_dates[1]]...
+    )
+
+    OUT = (inflfn.f[_mask_dates[1]](base)) .* F
+    OUT = OUT .+ (inflfn.f[_mask_dates[1] + 1](base)) .* G
+
+    # applying the splice in the remaining overlaped intervals (if any)
+    if length(_mask_dates) >= 2
+        for j in _mask_dates[2:end]
+            F = ramp_down(eltype(base), base.dates, inflfn.dates[j]...)
+            G = ramp_up(eltype(base), base.dates, inflfn.dates[j]...)
+            OUT = OUT .* F
+            OUT = OUT + (inflfn.f[j + 1](base) .* G)
+        end
+    end
+
+    # returning the spliced intermediate monthly variation
+    return convert(Array{eltype(base)}, OUT)
+end
+
+"""
     ramp_down(X::AbstractRange{<:Real}, a::Real, b::Real)
 
 Generates a "ramp down" weight vector over the range X, transitioning from 1 to 0
@@ -87,7 +132,7 @@ between points a and b. For values in X less than or equal to a, the weight
 is 1; for values greater than or equal to b, the weight is 0; and for values
 within the interval (a, b), the weight decreases linearly from 1 to 0.
 """
-function ramp_down(X::AbstractRange{<:Real}, a::Real, b::Real)
+function ramp_down(::Type{R}, X::AbstractRange{<:Real}, a::Real, b::Real) where {R <: AbstractFloat}
 
     # Starting point of the ramp
     A = min(a, b)
@@ -95,7 +140,7 @@ function ramp_down(X::AbstractRange{<:Real}, a::Real, b::Real)
     B = max(a, b)
 
     # preallocate the output weight vector given the input range X
-    ramp_weights = Vector{Float64}(undef, length(X))
+    ramp_weights = Vector{R}(undef, length(X))
 
     # walking through all elements in the range X
     for (i, x) in enumerate(X)
@@ -125,12 +170,12 @@ between dates a and b. For dates in X less than or equal to a, the weight
 is 1; for dates greater than or equal to b, the weight is 0; and for dates
 within the interval (a, b), the weight decreases linearly from 1 to 0.
 """
-function ramp_down(X::StepRange{Date, T}, a::Date, b::Date) where {T <: Period}
+function ramp_down(::Type{R}, X::StepRange{Date, T}, a::Date, b::Date) where {T <: Period, R <: AbstractFloat}
     # constructing a int range from the date range
     X_int = 1:length(X)
-    a = findfirst(X .== a)
-    b = findfirst(X .== b)
-    return ramp_down(X_int, a, b)
+    a_int = findfirst(X .== a)
+    b_int = findfirst(X .== b)
+    return ramp_down(R, X_int, a_int, b_int)
 end
 
 
@@ -141,8 +186,8 @@ between points a and b. For values in X less than or equal to a, the weight
 is 0; for values greater than or equal to b, the weight is 1; and for values
 within the interval (a, b), the weight increases linearly from 0 to 1.
 """
-function ramp_up(X::AbstractRange{<:Real}, a::Real, b::Real)
-    return 1 .- ramp_down(X, a, b)
+function ramp_up(::Type{R}, X::AbstractRange{<:Real}, a::Real, b::Real) where {R <: AbstractFloat}
+    return 1 .- ramp_down(R, X, a, b)
 end
 
 
@@ -153,44 +198,51 @@ between dates a and b. For dates in X less than or equal to a, the weight
 is 0; for dates greater than or equal to b, the weight is 1; and for dates
 within the interval (a, b), the weight increases linearly from 0 to 1.
 """
-function ramp_up(X::StepRange{Date, T}, a::Date, b::Date) where {T <: Period}
-    return 1 .- ramp_down(X, a, b)
+function ramp_up(::Type{R}, X::StepRange{Date, T}, a::Date, b::Date) where {T <: Period, R <: AbstractFloat}
+    return 1 .- ramp_down(R, X, a, b)
 end
 
-"""
-    cpi_dates(cs::CountryStructure)
 
-Devuelve las fechas en donde está definido el IPC para un CountryStructure.
-Similar a infl_dates(cs::CountryStructure).
 """
-function cpi_dates(cst::CountryStructure)
-    return first(cst.base).dates[1]:Month(1):last(cst.base).dates[end]
-end
+    (inflfn::InflationSplice)(cs::CountryStructure, ::CPIVarInterm)
+
+Evaluate the InflationSplice function on a given CountryStructure `cs`, 
+returning the corresponding CPIVarInterm.
+
+If no transition dates are specified, the function concatenates the intermediate
+monthly variations from each inflation function directly, assuming that each
+function corresponds to a different base in the CountryStructure.
+
+If transition dates are provided, it creates "ramp down" and "ramp up" weights 
+to smoothly transition between the results of the different inflation functions
+over the specified date intervals.
+"""
 
 function (inflfn::InflationSplice)(cs::CountryStructure, ::CPIVarInterm)
     f = inflfn.f
     dates = inflfn.dates
-    #length(f) == length(cs.base) || throw(ArgumentError("número de funciones a concatenar deber coincidir con número de bases"))
 
-    # EN EL CASO QUE NO SE DESIGNE UN PERIODO DE TRANSICION SE CONCATENAN DIRECTAMENTE LAS VARIACIONES INTERMENSUALES
+    # In the case that no transition period is designated, the monthly variations are concatenated directly
     if isnothing(dates)
+
+        @assert length(f) >= length(cs.base) "if no transition dates are given, the number of functions must match the number of bases"
+
         L = cumsum([periods(x) for x in cs.base])
         LL = hcat(vcat([1], L[1:(end - 1)] .+ 1), L)
         W = map(x -> x(cs, CPIVarInterm()), f)
         OUT = vcat([W[i][LL[i, 1]:LL[i, 2]] for i in 1:length(L)]...)
 
-        # EN EL CASO QUE SE DESEA UNA TRANSICION GRADUAL EN VARIACIONES INTERMENSUALES SE CREAN
-        # "RAMPAS" DE "APAGADO" y "ENCENDIDO"
+        # In the case that a transition period is desired, on and off "ramps" are created
     else
-        X = cpi_dates(cs)
-        F = ramp_down(X, dates[1]...)
-        G = ramp_up(X, dates[1]...)
+        X = index_dates(cs)
+        F = ramp_down(eltype(cs), X, dates[1]...)
+        G = ramp_up(eltype(cs), X, dates[1]...)
         OUT = (f[1](cs, CPIVarInterm())) .* F .+ (f[2](cs, CPIVarInterm())) .* G
 
         if length(dates) >= 2
             for i in 2:length(dates)
-                F = CPIDataBase.ramp_down(X, dates[i]...)
-                G = CPIDataBase.ramp_up(X, dates[i]...)
+                F = CPIDataBase.ramp_down(eltype(cs), X, dates[i]...)
+                G = CPIDataBase.ramp_up(eltype(cs), X, dates[i]...)
                 OUT = OUT .* F
                 OUT = OUT + f[i + 1](cs, CPIVarInterm()) .* G
             end
@@ -215,27 +267,28 @@ end
 function (inflfn::InflationSplice)(cs::CountryStructure, ::CPIVarInterm, date::Date)
     f = inflfn.f
     dates = inflfn.dates
-    #length(f) == length(cs.base) || throw(ArgumentError("número de funciones a concatenar deber coincidir con número de bases"))
 
-    # EN EL CASO QUE NO SE DESIGNE UN PERIODO DE TRANSICION SE CONCATENAN DIRECTAMENTE LAS VARIACIONES INTERMENSUALES
+    # In the case that no transition period is designated, the monthly variations are concatenated directly
     if isnothing(dates)
+
+        @assert length(f) >= length(cs.base) "if no transition dates are given, the number of functions must match the number of bases"
+
         L = cumsum([periods(x) for x in cs.base])
         LL = hcat(vcat([1], L[1:(end - 1)] .+ 1), L)
         W = map(x -> x(cs, CPIVarInterm(), date), f)
         OUT = vcat([W[i][LL[i, 1]:LL[i, 2]] for i in 1:length(L)]...)
 
-        # EN EL CASO QUE SE DESEA UNA TRANSICION GRADUAL EN VARIACIONES INTERMENSUALES SE CREAN
-        # "RAMPAS" DE "APAGADO" y "ENCENDIDO"
+        # In the case that a transition period is desired, on and off "ramps" are created
     else
-        X = cpi_dates(cs)
-        F = ramp_down(X, dates[1]...)
-        G = ramp_up(X, dates[1]...)
+        X = index_dates(cs)
+        F = ramp_down(eltype(cs), X, dates[1]...)
+        G = ramp_up(eltype(cs), X, dates[1]...)
         OUT = (f[1](cs, CPIVarInterm(), date)) .* F .+ (f[2](cs, CPIVarInterm(), date)) .* G
 
         if length(dates) >= 2
             for i in 2:length(dates)
-                F = CPIDataBase.ramp_down(X, dates[i]...)
-                G = CPIDataBase.ramp_up(X, dates[i]...)
+                F = ramp_down(eltype(cs), X, dates[i]...)
+                G = ramp_up(eltype(cs), X, dates[i]...)
                 OUT = OUT .* F
                 OUT = OUT + f[i + 1](cs, CPIVarInterm(), date) .* G
             end
