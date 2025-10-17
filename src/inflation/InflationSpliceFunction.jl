@@ -1,41 +1,54 @@
-struct InflationSpliceUnweighted <: InflationFunction
-    f::Vector{<:InflationFunction}
-    name::Union{Nothing, AbstractString}
-    tag::Union{Nothing, AbstractString}
-
-    function InflationSpliceUnweighted(
-            f::Vector{<:InflationFunction},
-            name::Union{Nothing, AbstractString} = nothing,
-            tag::Union{Nothing, AbstractString} = nothing
-        )
-        return new(f, name, tag)
-    end
-end
-
-
-function InflationSpliceUnweighted(
-        f::Vector{<:InflationFunction};
-        name::Union{Nothing, AbstractString} = nothing,
-        tag::Union{Nothing, AbstractString} = nothing
-    )
-    return InflationSpliceUnweighted(f, name, tag)
-end
-
-
-function InflationSpliceUnweighted(
-        f::Vararg{<:InflationFunction};
-        name::Union{Nothing, AbstractString} = nothing,
-        tag::Union{Nothing, AbstractString} = nothing
-    )
-    return InflationSpliceUnweighted(collect(f); name, tag)
-end
-
-function (sfn::InflationSpliceUnweighted)(base::VarCPIBase)
-    return @error "InflationSpliceUnweighted only works over CountryStructure objects."
-end
+# ABSTRACT INFLATION SPLICE TYPE
 
 """
-    InflationSplice <: InflationFunction
+    InflationSpliceFunction <: InflationFunction
+Abstract type for inflation functions that splice the results of several inflation
+functions over transition date intervals of VarCPIBase in a CountryStructure.
+"""
+abstract type InflationSpliceFunction <: InflationFunction end
+
+
+"""
+    splice_length(inflfn::InflationSpliceFunction)
+Return the number of inflation functions in the InflationSpliceFunction.
+"""
+function splice_length(inflfn::InflationSpliceFunction)
+    return @error "Extend this methods for other InflationSpliceFunction types."
+end
+
+
+"""
+    splice_inflfns(inflfn::InflationSpliceFunction)
+Return the vector of inflation functions in the InflationSplice.
+"""
+function splice_inflfns(inflfn::InflationSpliceFunction)
+    return @error "Extend this methods for other InflationSpliceFunction types."
+end
+
+
+"""
+    splice_dates(inflfn::InflationSpliceFunction)
+Return the vector of transition date tuples in the InflationSplice.
+"""
+function splice_dates(inflfn::InflationSpliceFunction)
+    return @error "Extend this methods for other InflationSpliceFunction types."
+end
+
+
+"""
+    components(inflfn::InflationSpliceFunction)
+Return a DataFrame with the components of the InflationSplice, including
+the measure names and weights of each inflation function, as well as the
+transition dates if specified.
+"""
+function components(inflfn::InflationSpliceFunction)
+    return @error "Extend this methods for other InflationSpliceFunction types."
+end
+
+# INFLATION SPLICE --------------------------------------------------------
+
+"""
+    InflationSplice <: InflationSpliceFunction
 
 Inflation Function for splicing the results of several inflation functions over
 transition date intervals.
@@ -46,7 +59,7 @@ dates: Vector of Tuple{Date, Date} indicating the transition intervals
 name: Optional name for the InflationSplice function
 tag: Optional tag for the InflationSplice function
 """
-struct InflationSplice <: InflationFunction
+struct InflationSplice <: InflationSpliceFunction
     f_ramp_down::Vector{<:InflationFunction}
     f_ramp_up::Vector{<:InflationFunction}
     dates::Vector{Tuple{Date, Date}}
@@ -129,16 +142,36 @@ function measure_name(inflfn::InflationSplice)
 end
 
 
-"""
-    measure_tag(inflfn::InflationSplice)
-Return the tag of all the InflationFunction components of the InflationSplice,
-concatenated with "--" as separator, unless a specific name is provided.
-"""
 function measure_tag(inflfn::InflationSplice)
     s_ramp_down = string((measure_tag.(inflfn.f_ramp_down) .* "--")...)
     s_last = string(measure_tag.(inflfn.f_ramp_up[end]))
     return string(s_ramp_down, s_last)
 end
+
+
+function splice_length(inflfn::InflationSplice)
+    return length(inflfn.dates)
+end
+
+
+function splice_inflfns(inflfn::InflationSplice)
+    return [inflfn.f_ramp_down..., inflfn.f_ramp_up[end]]
+end
+
+
+function splice_dates(inflfn::InflationSplice)
+    return inflfn.dates
+end
+
+
+function components(inflfn::InflationSplice)
+    components = DataFrame(
+        measure = measure_name.([inflfn.f_ramp_down..., inflfn.f_ramp_up[end]]),
+        dates = [NaN, inflfn.dates...]
+    )
+    return components
+end
+
 
 # Helper functions
 """
@@ -242,56 +275,66 @@ function ramp_down(::Type{R}, X::StepRange{Date, T}, a::Date, b::Date) where {T 
     return 1 .- ramp_up(R, X, a, b)
 end
 
-#=
-"""
-    (inflfn::InflationSplice)(cs::CountryStructure, ::CPIVarInterm)
 
-Evaluate the InflationSplice function on a given CountryStructure `cs`, 
-returning the corresponding CPIVarInterm.
+# INFLATION SPLICE UNWEIGHTED ---------------------------------------------
 
-If no transition dates are specified, the function concatenates the intermediate
-monthly variations from each inflation function directly, assuming that each
-function corresponds to a different base in the CountryStructure.
 
-If transition dates are provided, it creates "ramp down" and "ramp up" weights 
-to smoothly transition between the results of the different inflation functions
-over the specified date intervals.
-"""
+struct InflationSpliceUnweighted <: InflationSpliceFunction
+    f::Vector{<:InflationFunction}
+    name::Union{Nothing, AbstractString}
+    tag::Union{Nothing, AbstractString}
 
-function (inflfn::InflationSplice)(cs::CountryStructure, ::CPIVarInterm)
-    f = inflfn.f
-    dates = inflfn.dates
-
-    # In the case that no transition period is designated, the monthly variations are concatenated directly
-    if isnothing(dates)
-
-        @assert length(f) >= length(cs.base) "if no transition dates are given, the number of functions must match the number of bases"
-
-        L = cumsum([periods(x) for x in cs.base])
-        LL = hcat(vcat([1], L[1:(end - 1)] .+ 1), L)
-        W = map(x -> x(cs, CPIVarInterm()), f)
-        OUT = vcat([W[i][LL[i, 1]:LL[i, 2]] for i in 1:length(L)]...)
-
-        # In the case that a transition period is desired, on and off "ramps" are created
-    else
-        X = index_dates(cs)
-        F = ramp_down(eltype(cs), X, dates[1]...)
-        G = ramp_up(eltype(cs), X, dates[1]...)
-        OUT = (f[1](cs, CPIVarInterm())) .* F .+ (f[2](cs, CPIVarInterm())) .* G
-
-        if length(dates) >= 2
-            for i in 2:length(dates)
-                F = CPIDataBase.ramp_down(eltype(cs), X, dates[i]...)
-                G = CPIDataBase.ramp_up(eltype(cs), X, dates[i]...)
-                OUT = OUT .* F
-                OUT = OUT + f[i + 1](cs, CPIVarInterm()) .* G
-            end
-        end
+    function InflationSpliceUnweighted(
+            f::Vector{<:InflationFunction},
+            name::Union{Nothing, AbstractString},
+            tag::Union{Nothing, AbstractString}
+        )
+        return new(f, name, tag)
     end
-    return convert(Array{eltype(cs)}, OUT)
 end
 
 
+function InflationSpliceUnweighted(
+        f::Vector{<:InflationFunction};
+        name::Union{Nothing, AbstractString} = nothing,
+        tag::Union{Nothing, AbstractString} = nothing
+    )
+    return InflationSpliceUnweighted(f, name, tag)
+end
+
+
+function InflationSpliceUnweighted(
+        f::Vararg{<:InflationFunction};
+        name::Union{Nothing, AbstractString} = nothing,
+        tag::Union{Nothing, AbstractString} = nothing
+    )
+    return InflationSpliceUnweighted(collect(f); name, tag)
+end
+
+
+function (sfn::InflationSpliceUnweighted)(base::VarCPIBase)
+    return @error "InflationSpliceUnweighted only works over CountryStructure objects."
+end
+
+
+function components(inflfn::InflationSpliceUnweighted)
+    if inflfn.f isa Vector{CombinationFunction{A, B}} where {A} where {B}
+        components = [
+            DataFrame(
+                    measure = measure_name.(x.ensemble),
+                    weights = x.weights
+                )
+                for x in inflfn.f
+        ]
+    else
+        components = DataFrame(
+            measure = measure_name.(inflfn.f)
+        )
+    end
+    return components
+end
+
+#=
 """
     (inflfn::InflationSplice)(cs::CountryStructure)
 Evaluate the InflationSplice function on a given CountryStructure `cs`.
@@ -382,79 +425,5 @@ function (inflfn::InflationSplice)(cs::CountryStructure, ::CPIIndex, date::Date)
     v_interm = inflfn(cs, CPIVarInterm(), date::Date)
     capitalize!(v_interm, 100)
     return v_interm
-end
-
-
-
-
-"""
-    splice_length(inflfn::InflationFunction)
-Return the number of inflation functions in the InflationSplice.
-If the input is not an InflationSplice, return 1.
-"""
-function splice_length(inflfn::InflationFunction)
-    if !(inflfn isa InflationSplice)
-        return 1
-    else
-        return length(inflfn.f)
-    end
-end
-
-
-"""
-    splice_inflfns(inflfn::InflationFunction)
-Return the vector of inflation functions in the InflationSplice.
-If the input is not an InflationSplice, return the input itself.
-"""
-function splice_inflfns(inflfn::InflationFunction)
-    if !(inflfn isa InflationSplice)
-        return inflfn
-    else
-        return inflfn.f
-    end
-end
-
-
-"""
-    splice_dates(inflfn::InflationFunction)
-Return the vector of transition date tuples in the InflationSplice.
-If the input is not an InflationSplice, return NaN.
-"""
-function splice_dates(inflfn::InflationFunction)
-    if !(inflfn isa InflationSplice)
-        return NaN
-    end
-    return inflfn.dates
-end
-
-
-"""
-    components(inflfn::InflationSplice)
-Return a DataFrame with the components of the InflationSplice, including
-the measure names and weights of each inflation function, as well as the
-transition dates if specified.
-"""
-function components(inflfn::InflationSplice)
-    if isnothing(inflfn.dates)
-        if inflfn.f isa Vector{CombinationFunction{A, B}} where {A} where {B}
-            components = [
-                DataFrame(
-                        measure = measure_name.(x.ensemble),
-                        weights = x.weights
-                    )
-                    for x in inflfn.f
-            ]
-        else
-            components = DataFrame(
-                measure = measure_name.(inflfn.f)
-            )
-        end
-    else
-        components = DataFrame(
-            measure = measure_name.(inflfn.f),
-            dates = [NaN, inflfn.dates...]
-        )
-    end
-    return components
 end
 =#

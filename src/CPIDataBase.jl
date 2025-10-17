@@ -26,7 +26,7 @@ export capitalize, varinterm, varinteran,
 export InflationFunction, EnsembleInflationFunction
 export EnsembleFunction, CombinationFunction
 export InflationSpliceFunction, InflationSplice
-export ramp_down, ramp_up
+export ramp_down, ramp_up, splice_length, splice_inflfns, splice_dates, components
 export InflationEnsemble, InflationCombination # alias de los 2 anteriores
 export components # componentes de una InflationCombination
 export num_measures, weights, measure_name, measure_tag, params
@@ -50,7 +50,7 @@ include("utils/varinteran.jl")
 include("inflation/InflationFunction.jl")
 include("inflation/EnsembleFunction.jl")
 include("inflation/CombinationFunction.jl")
-include("inflation/Splice.jl")
+include("inflation/InflationSpliceFunction.jl")
 
 # Medida de inflación básica
 include("inflation/InflationTotalCPI.jl")
