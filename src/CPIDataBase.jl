@@ -25,8 +25,8 @@ export capitalize, varinterm, varinteran,
 # Exportar tipos para implementar nuevas funciones de inflación
 export InflationFunction, EnsembleInflationFunction
 export EnsembleFunction, CombinationFunction
-export InflationSpliceFunction, InflationSplice
-export ramp_down, ramp_up, splice_length, splice_inflfns, splice_dates, components
+export InflationSpliceFunction, InflationSplice, InflationSpliceUnweighted
+export ramp_down, ramp_up, splice_length, splice_functions, splice_dates, components
 export InflationEnsemble, InflationCombination # alias de los 2 anteriores
 export components # componentes de una InflationCombination
 export num_measures, weights, measure_name, measure_tag, params

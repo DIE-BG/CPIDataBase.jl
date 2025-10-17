@@ -18,10 +18,10 @@ end
 
 
 """
-    splice_inflfns(inflfn::InflationSpliceFunction)
+    splice_functions(inflfn::InflationSpliceFunction)
 Return the vector of inflation functions in the InflationSplice.
 """
-function splice_inflfns(inflfn::InflationSpliceFunction)
+function splice_functions(inflfn::InflationSpliceFunction)
     return @error "Extend this methods for other InflationSpliceFunction types."
 end
 
@@ -44,6 +44,7 @@ transition dates if specified.
 function components(inflfn::InflationSpliceFunction)
     return @error "Extend this methods for other InflationSpliceFunction types."
 end
+
 
 # INFLATION SPLICE --------------------------------------------------------
 
@@ -88,9 +89,20 @@ struct InflationSplice <: InflationSpliceFunction
 end
 
 
-function InflationSplice(
+"""
+    InflationSplice(
         f::Vector{<:InflationFunction};
         dates::Union{Nothing, Vector{Tuple{Date, Date}}} = nothing,
+        name::Union{Nothing, AbstractString} = nothing,
+        tag::Union{Nothing, AbstractString} = nothing
+    )
+
+Create an InflationSplice function from a vector of InflationFunction `f`, using the provided
+transition date intervals `dates`. The length of `f` must be one greater than the length of `dates`.
+"""
+function InflationSplice(
+        f::Vector{<:InflationFunction};
+        dates::Vector{Tuple{Date, Date}},
         name::Union{Nothing, AbstractString} = nothing,
         tag::Union{Nothing, AbstractString} = nothing
     )
@@ -98,9 +110,20 @@ function InflationSplice(
 end
 
 
-function InflationSplice(
+"""
+    InflationSplice(
         f::Vararg{<:InflationFunction};
         dates::Union{Nothing, Vector{Tuple{Date, Date}}} = nothing,
+        name::Union{Nothing, AbstractString} = nothing,
+        tag::Union{Nothing, AbstractString} = nothing
+    )
+Create an InflationSplice function from a variable number of InflationFunction `f`, using the provided
+transition date intervals `dates`. The number of functions in `f` must be one greater than
+the length of `dates`.
+"""
+function InflationSplice(
+        f::Vararg{<:InflationFunction};
+        dates::Vector{Tuple{Date, Date}},
         name::Union{Nothing, AbstractString} = nothing,
         tag::Union{Nothing, AbstractString} = nothing
     )
@@ -116,13 +139,27 @@ Evaluate the InflationSplice function on a given VarCPIBase `base`, returning th
 """
 function (sfn::InflationSplice)(base::VarCPIBase)
 
+    # Preallocate output vector of m-o-m inflation
     v = zeros(eltype(base), periods(base))
 
+    # f_ramp_down is the function to be used before the transition dates
+    # f_ramp_up is the function to be used after the transition dates
+
+    # Because more that one transition period can be specified, we loop over
+    # all of them. For each one we have the corresponding f_ramp_down (f),
+    # f_ramp_up (g) functions and the transition dates in d.
     for (f, g, d) in zip(sfn.f_ramp_down, sfn.f_ramp_up, sfn.dates)
 
+        # compute the weights for f_ramp_down. This will be 1 before the transition
+        # period and will ramp down to 0 during the transition period
         f_w = ramp_down(eltype(base), base.dates, d...)
+        # compute the weights for f_ramp_up. This will be 0 before the transition
+        # period and will ramp up to 1 during the transition period
         g_w = ramp_up(eltype(base), base.dates, d...)
 
+        # The output is the weighted sum of the two functions. Before the transition
+        # period, only f contributes, after the transition period, only g contributes,
+        # and during the transition period, both contribute according to their weights.
         v = v .+ (f(base) .* f_w) .+ (g(base) .* g_w)
     end
 
@@ -154,7 +191,7 @@ function splice_length(inflfn::InflationSplice)
 end
 
 
-function splice_inflfns(inflfn::InflationSplice)
+function splice_functions(inflfn::InflationSplice)
     return [inflfn.f_ramp_down..., inflfn.f_ramp_up[end]]
 end
 
@@ -278,7 +315,12 @@ end
 
 # INFLATION SPLICE UNWEIGHTED ---------------------------------------------
 
-
+"""
+    InflationSpliceUnweighted <: InflationSpliceFunction
+Inflation Function for splicing the results of several inflation functions over
+the different VarCPIBase in a CountryStructure, without transition periods, just
+stacking the results of each function over each base.
+"""
 struct InflationSpliceUnweighted <: InflationSpliceFunction
     f::Vector{<:InflationFunction}
     name::Union{Nothing, AbstractString}
@@ -294,6 +336,14 @@ struct InflationSpliceUnweighted <: InflationSpliceFunction
 end
 
 
+"""
+    InflationSpliceUnweighted(
+        f::Vector{<:InflationFunction};
+        name::Union{Nothing, AbstractString} = nothing,
+        tag::Union{Nothing, AbstractString} = nothing
+    )
+Create an InflationSpliceUnweighted function from a vector of InflationFunction `f`.
+"""
 function InflationSpliceUnweighted(
         f::Vector{<:InflationFunction};
         name::Union{Nothing, AbstractString} = nothing,
@@ -303,6 +353,14 @@ function InflationSpliceUnweighted(
 end
 
 
+"""
+    InflationSpliceUnweighted(
+        f::Vararg{<:InflationFunction};
+        name::Union{Nothing, AbstractString} = nothing,
+        tag::Union{Nothing, AbstractString} = nothing
+    )
+Create an InflationSpliceUnweighted function from a variable number of InflationFunction `f`.
+"""
 function InflationSpliceUnweighted(
         f::Vararg{<:InflationFunction};
         name::Union{Nothing, AbstractString} = nothing,
@@ -314,6 +372,103 @@ end
 
 function (sfn::InflationSpliceUnweighted)(base::VarCPIBase)
     return @error "InflationSpliceUnweighted only works over CountryStructure objects."
+end
+
+
+function (inflfn::InflationSpliceUnweighted)(cs::CountryStructure, ::CPIVarInterm, date::Date)
+
+    @assert length(inflfn.f) >= length(cs.base) "The number of functions must match the number of bases"
+
+    length(inflfn.f) > length(cs.base) && @warn "The number of functions is greater than the number of bases; extra functions will be ignored."
+
+    # Getting the number of periods in each base inside the CountryStructure
+    L = cumsum([periods(x) for x in cs.base])
+
+    # Matrix with the start and end indices for each base inside the CountryStructure
+    # each row is a base
+    LL = hcat(vcat([1], L[1:(end - 1)] .+ 1), L)
+
+    # Evaluating each inflation function over the corresponding base
+    W = map(f -> f(cs, CPIVarInterm(), date), inflfn.f)
+    OUT = vcat([W[i][LL[i, 1]:LL[i, 2]] for i in 1:length(L)]...)
+
+    return convert(Array{eltype(cs)}, OUT)
+end
+
+
+function (inflfn::InflationSplice)(cs::CountryStructure, ::CPIIndex, date::Date)
+    v_interm = inflfn(cs, CPIVarInterm(), date::Date)
+    capitalize!(v_interm, 100)
+    return v_interm
+end
+
+
+function (inflfn::InflationSplice)(cs::CountryStructure, date::Date)
+    cpi_index = inflfn(cs, CPIIndex(), date)
+    return varinteran(cpi_index)
+end
+
+
+function (inflfn::InflationSpliceUnweighted)(cs::CountryStructure, ::CPIVarInterm)
+
+    @assert length(inflfn.f) >= length(cs.base) "The number of functions must match the number of bases"
+
+    length(inflfn.f) > length(cs.base) && @warn "The number of functions is greater than the number of bases; extra functions will be ignored."
+
+    # Getting the number of periods in each base inside the CountryStructure
+    L = cumsum([periods(x) for x in cs.base])
+
+    # Matrix with the start and end indices for each base inside the CountryStructure
+    # each row is a base
+    LL = hcat(vcat([1], L[1:(end - 1)] .+ 1), L)
+
+    # Evaluating each inflation function over the corresponding base
+    W = map(f -> f(cs, CPIVarInterm()), inflfn.f)
+    OUT = vcat([W[i][LL[i, 1]:LL[i, 2]] for i in 1:length(L)]...)
+
+    return convert(Array{eltype(cs)}, OUT)
+end
+
+
+function (inflfn::InflationSplice)(cs::CountryStructure, ::CPIIndex)
+    v_interm = inflfn(cs, CPIVarInterm())
+    capitalize!(v_interm, 100)
+    return v_interm
+end
+
+
+function (inflfn::InflationSplice)(cs::CountryStructure)
+    cpi_index = inflfn(cs, CPIIndex())
+    return varinteran(cpi_index)
+end
+
+
+function measure_name(inflfn::InflationSpliceUnweighted)
+    s_1 = string((measure_name.(inflfn.f[1:(end - 1)]) .* "--")...)
+    s_2 = string(measure_name.(inflfn.f[end]))
+    return string(s_1, s_2)
+end
+
+
+function measure_tag(inflfn::InflationSpliceUnweighted)
+    s_1 = string((measure_tag.(inflfn.f[1:(end - 1)]) .* "--")...)
+    s_2 = string(measure_tag.(inflfn.f[end]))
+    return string(s_1, s_2)
+end
+
+
+function splice_length(inflfn::InflationSpliceUnweighted)
+    return length(inflfn.f)
+end
+
+
+function splice_functions(inflfn::InflationSpliceUnweighted)
+    return inflfn.f
+end
+
+
+function splice_dates(inflfn::InflationSpliceUnweighted)
+    return @error "InflationSpliceUnweighted does not have transition dates."
 end
 
 
@@ -333,97 +488,3 @@ function components(inflfn::InflationSpliceUnweighted)
     end
     return components
 end
-
-#=
-"""
-    (inflfn::InflationSplice)(cs::CountryStructure)
-Evaluate the InflationSplice function on a given CountryStructure `cs`.
-"""
-function (inflfn::InflationSplice)(cs::CountryStructure)
-    cpi_index = inflfn(cs, CPIIndex())
-    return varinteran(cpi_index)
-end
-
-
-"""
-    (inflfn::InflationSplice)(cs::CountryStructure, ::CPIIndex)
-Evaluate the InflationSplice function on a given CountryStructure `cs` and 
-returning the corresponding CPIIndex.
-"""
-function (inflfn::InflationSplice)(cs::CountryStructure, ::CPIIndex)
-    v_interm = inflfn(cs, CPIVarInterm())
-    capitalize!(v_interm, 100)
-    return v_interm
-end
-
-
-"""
-    (inflfn::InflationSplice)(cs::CountryStructure, ::CPIVarInterm, date::Date)
-
-Evaluate the InflationSplice function on a given CountryStructure `cs`, 
-returning the corresponding CPIVarInterm.
-
-If no transition dates are specified, the function concatenates the intermediate
-monthly variations from each inflation function directly, assuming that each
-function corresponds to a different base in the CountryStructure.
-
-If transition dates are provided, it creates "ramp down" and "ramp up" weights 
-to smoothly transition between the results of the different inflation functions
-over the specified date intervals.
-"""
-function (inflfn::InflationSplice)(cs::CountryStructure, ::CPIVarInterm, date::Date)
-    f = inflfn.f
-    dates = inflfn.dates
-
-    # In the case that no transition period is designated, the monthly variations are concatenated directly
-    if isnothing(dates)
-
-        @assert length(f) >= length(cs.base) "if no transition dates are given, the number of functions must match the number of bases"
-
-        L = cumsum([periods(x) for x in cs.base])
-        LL = hcat(vcat([1], L[1:(end - 1)] .+ 1), L)
-        W = map(x -> x(cs, CPIVarInterm(), date), f)
-        OUT = vcat([W[i][LL[i, 1]:LL[i, 2]] for i in 1:length(L)]...)
-
-        # In the case that a transition period is desired, on and off "ramps" are created
-    else
-        X = index_dates(cs)
-        F = ramp_down(eltype(cs), X, dates[1]...)
-        G = ramp_up(eltype(cs), X, dates[1]...)
-        OUT = (f[1](cs, CPIVarInterm(), date)) .* F .+ (f[2](cs, CPIVarInterm(), date)) .* G
-
-        if length(dates) >= 2
-            for i in 2:length(dates)
-                F = ramp_down(eltype(cs), X, dates[i]...)
-                G = ramp_up(eltype(cs), X, dates[i]...)
-                OUT = OUT .* F
-                OUT = OUT + f[i + 1](cs, CPIVarInterm(), date) .* G
-            end
-        end
-    end
-    return convert(Array{eltype(cs)}, OUT)
-end
-
-
-"""
-    (inflfn::InflationSplice)(cs::CountryStructure, date::Date)
-Evaluate the InflationSplice function on a given CountryStructure `cs`,
-starting from a specific date.
-"""
-function (inflfn::InflationSplice)(cs::CountryStructure, date::Date)
-    cpi_index = inflfn(cs, CPIIndex(), date)
-    return varinteran(cpi_index)
-end
-
-
-"""
-    (inflfn::InflationSplice)(cs::CountryStructure, ::CPIIndex)
-Evaluate the InflationSplice function on a given CountryStructure `cs`,
-starting from a specific date and returning the corresponding CPIIndex.
-"""
-function (inflfn::InflationSplice)(cs::CountryStructure, ::CPIIndex, date::Date)
-    v_interm = inflfn(cs, CPIVarInterm(), date::Date)
-    capitalize!(v_interm, 100)
-    return v_interm
-end
-=#
