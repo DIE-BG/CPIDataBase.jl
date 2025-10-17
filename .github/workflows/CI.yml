@@ -54,8 +54,7 @@ jobs:
       - name: Run doctests
         shell: julia --project=docs --color=yes {0}
         run: |
-          julia --project=docs -e '
-            using Documenter: DocMeta, doctest
-            using CPIDataBase
-            DocMeta.setdocmeta!(CPIDataBase, :DocTestSetup, :(using CPIDataBase); recursive=true)
-            doctest(CPIDataBase)'
+          using Documenter: DocMeta, doctest
+          using CPIDataBase
+          DocMeta.setdocmeta!(CPIDataBase, :DocTestSetup, :(using CPIDataBase); recursive=true)
+          doctest(CPIDataBase)
