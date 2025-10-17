@@ -13,6 +13,27 @@ struct InflationSpliceUnweighted <: InflationFunction
 end
 
 
+function InflationSpliceUnweighted(
+        f::Vector{<:InflationFunction};
+        name::Union{Nothing, AbstractString} = nothing,
+        tag::Union{Nothing, AbstractString} = nothing
+    )
+    return InflationSpliceUnweighted(f, name, tag)
+end
+
+
+function InflationSpliceUnweighted(
+        f::Vararg{<:InflationFunction};
+        name::Union{Nothing, AbstractString} = nothing,
+        tag::Union{Nothing, AbstractString} = nothing
+    )
+    return InflationSpliceUnweighted(collect(f); name, tag)
+end
+
+function (sfn::InflationSpliceUnweighted)(base::VarCPIBase)
+    return @error "InflationSpliceUnweighted only works over CountryStructure objects."
+end
+
 """
     InflationSplice <: InflationFunction
 
@@ -95,6 +116,29 @@ function (sfn::InflationSplice)(base::VarCPIBase)
     return v
 end
 
+
+"""
+    measure_name(inflfn::InflationSplice)
+Return the name of all the InflationFunction components of the InflationSplice,
+concatenated with "--" as separator, unless a specific name is provided.
+"""
+function measure_name(inflfn::InflationSplice)
+    s_ramp_down = string((measure_name.(inflfn.f_ramp_down) .* "--")...)
+    s_last = string(measure_name.(inflfn.f_ramp_up[end]))
+    return string(s_ramp_down, s_last)
+end
+
+
+"""
+    measure_tag(inflfn::InflationSplice)
+Return the tag of all the InflationFunction components of the InflationSplice,
+concatenated with "--" as separator, unless a specific name is provided.
+"""
+function measure_tag(inflfn::InflationSplice)
+    s_ramp_down = string((measure_tag.(inflfn.f_ramp_down) .* "--")...)
+    s_last = string(measure_tag.(inflfn.f_ramp_up[end]))
+    return string(s_ramp_down, s_last)
+end
 
 # Helper functions
 """
@@ -341,26 +385,6 @@ function (inflfn::InflationSplice)(cs::CountryStructure, ::CPIIndex, date::Date)
 end
 
 
-"""
-    measure_name(inflfn::InflationSplice)
-Return the name of all the InflationFunction components of the InflationSplice,
-concatenated with "--" as separator, unless a specific name is provided.
-"""
-function measure_name(inflfn::InflationSplice)
-    isnothing(inflfn.name) || return inflfn.name
-    return string((measure_name.(inflfn.f) .* "--")...)[1:(end - 4)]
-end
-
-
-"""
-    measure_tag(inflfn::InflationSplice)
-Return the tag of all the InflationFunction components of the InflationSplice,
-concatenated with "--" as separator, unless a specific name is provided.
-"""
-function measure_tag(inflfn::InflationSplice)
-    isnothing(inflfn.tag) || return inflfn.tag
-    return string((measure_tag.(inflfn.f) .* "--")...)[1:(end - 4)]
-end
 
 
 """
