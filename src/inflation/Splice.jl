@@ -24,31 +24,27 @@ struct InflationSplice <: InflationFunction
             tag::Union{Nothing, AbstractString} = nothing
         )
 
-        # Asserting some properties of the input arguments
+        # Asserting some properties of the input arguments if dates are given
         if !isnothing(dates)
-            length(f) == length(dates) + 1 ||
-                throw(ArgumentError("There must be one more function than date intervals."))
-            # validate if the dates are well ordered and non-overlapping
+            _validate_size(f, dates)
             _validate_dates(dates)
         end
 
         return new(f, dates, name, tag)
     end
-
-    function InflationSplice(
-            f::Vararg{<:InflationFunction};
-            dates::Union{Nothing, Vector{NTuple{2, Date}}} = nothing,
-            name::Union{Nothing, AbstractString} = nothing,
-            tag::Union{Nothing, AbstractString} = nothing
-        )
-
-        return InflationSplice(collect(f); dates = dates, name = name, tag = tag)
-    end
-
 end
 
+function _validate_size(f::Vector{<:InflationFunction}, dates::Vector{Tuple{Date, Date}})
+    f_size = length(f)
+    dates_size = length(dates)
 
-# Helper functions
+    if f_size != dates_size + 1
+        throw(ArgumentError("There must be one more function than date intervals."))
+    end
+
+    return nothing
+end
+
 
 """
     _validate_dates(dates::Vector{Tuple{Date, Date}})
@@ -58,11 +54,12 @@ This helper function validates that the input vector of date tuples meets the fo
 2) Between consecutive tuples: fin[i] < ini[i+1]  (ascending temporal order and no overlap)
 """
 function _validate_dates(dates::Vector{Tuple{Date, Date}})
-    # 1) Dentro de cada tupla: ini < fin
+    # inside each tuple: tuple[1] < tuple[2]
     @inbounds for (ini, fin) in dates
-        ini < fin || throw(ArgumentError("Each tuple must satisfy ini < fin; received ($ini, $fin)."))
+        ini < fin || throw(ArgumentError("Each tuple must satisfy tuple[1] < tuple[2]; received ($ini, $fin)."))
     end
-    # 2) Entre tuplas consecutivas: fin[i] < ini[i+1]  (orden temporal ascendente y sin solape)
+
+    # Between consecutive tuples: tuple[i][2] < tuple[i+1][1]  (ascending temporal order and no overlap)
     @inbounds for i in firstindex(dates):(lastindex(dates) - 1)
         dates[i][2] < dates[i + 1][1] ||
             throw(
@@ -74,6 +71,19 @@ function _validate_dates(dates::Vector{Tuple{Date, Date}})
     end
     return nothing
 end
+
+
+function InflationSplice(
+        f::Vararg{<:InflationFunction};
+        dates::Union{Nothing, Vector{Tuple{Date, Date}}} = nothing,
+        name::Union{Nothing, AbstractString} = nothing,
+        tag::Union{Nothing, AbstractString} = nothing
+    )
+
+    return InflationSplice(collect(f); dates = dates, name = name, tag = tag)
+end
+
+# Helper functions
 
 
 """
@@ -125,14 +135,14 @@ function (inflfn::InflationSplice)(base::VarCPIBase)
 end
 
 """
-    ramp_down(X::AbstractRange{<:Real}, a::Real, b::Real)
+    ramp_up(X::AbstractRange{<:Real}, a::Real, b::Real)
 
 Generates a "ramp down" weight vector over the range X, transitioning from 1 to 0
 between points a and b. For values in X less than or equal to a, the weight
 is 1; for values greater than or equal to b, the weight is 0; and for values
 within the interval (a, b), the weight decreases linearly from 1 to 0.
 """
-function ramp_down(::Type{R}, X::AbstractRange{<:Real}, a::Real, b::Real) where {R <: AbstractFloat}
+function ramp_up(::Type{R}, X::AbstractRange{<:T}, a::T, b::T) where {R <: AbstractFloat, T <: Integer}
 
     # Starting point of the ramp
     A = min(a, b)
@@ -147,15 +157,15 @@ function ramp_down(::Type{R}, X::AbstractRange{<:Real}, a::Real, b::Real) where 
 
         # for all the values prior the starting point of the ramp, the weight is 1
         if x <= A
-            ramp_weights[i] = 1
+            ramp_weights[i] = 0
 
             # for all the values within the ramp, the weight decreases linearly from 1 to 0
         elseif A < x <= B
-            ramp_weights[i] = 1 .- (findfirst(X .== x) - findfirst(X .== A)) / (findfirst(X .== B) - findfirst(X .== A))
+            ramp_weights[i] = (x - A) / (B - A)
 
             # for all the values after the ending point of the ramp, the weight is 0
         else
-            ramp_weights[i] = 0
+            ramp_weights[i] = 1
         end
     end
     return ramp_weights
@@ -163,43 +173,44 @@ end
 
 
 """
-    ramp_down(X::StepRange{Date, T}, a::Date, b::Date) where {T <: Period}
+    ramp_up(X::StepRange{Date, T}, a::Date, b::Date) where {T <: Period}
 
 Generates a "ramp down" weight vector over the date range X, transitioning from 1 to 0
 between dates a and b. For dates in X less than or equal to a, the weight
 is 1; for dates greater than or equal to b, the weight is 0; and for dates
 within the interval (a, b), the weight decreases linearly from 1 to 0.
 """
-function ramp_down(::Type{R}, X::StepRange{Date, T}, a::Date, b::Date) where {T <: Period, R <: AbstractFloat}
-    # constructing a int range from the date range
-    X_int = 1:length(X)
-    a_int = findfirst(X .== a)
-    b_int = findfirst(X .== b)
-    return ramp_down(R, X_int, a_int, b_int)
-end
-
-
-"""
-    ramp_up(X::AbstractRange{<:Real}, a::Real, b::Real)
-Generates a "ramp up" weight vector over the range X, transitioning from 0 to 1
-between points a and b. For values in X less than or equal to a, the weight
-is 0; for values greater than or equal to b, the weight is 1; and for values
-within the interval (a, b), the weight increases linearly from 0 to 1.
-"""
-function ramp_up(::Type{R}, X::AbstractRange{<:Real}, a::Real, b::Real) where {R <: AbstractFloat}
-    return 1 .- ramp_down(R, X, a, b)
-end
-
-
-"""
-    ramp_up(X::StepRange{Date, T}, a::Date, b::Date) where {T <: Period}
-Generates a "ramp up" weight vector over the date range X, transitioning from 0 to 1
-between dates a and b. For dates in X less than or equal to a, the weight
-is 0; for dates greater than or equal to b, the weight is 1; and for dates
-within the interval (a, b), the weight increases linearly from 0 to 1.
-"""
 function ramp_up(::Type{R}, X::StepRange{Date, T}, a::Date, b::Date) where {T <: Period, R <: AbstractFloat}
-    return 1 .- ramp_down(R, X, a, b)
+    # constructing a int range from the date range
+    X_extended = min(a, b, X[1]):X.step:max(a, b, X[end])
+    X_int = findfirst(X_extended .== X[1]):findfirst(X_extended .== X[end])
+    a_int = findfirst(X_extended .== a)
+    b_int = findfirst(X_extended .== b)
+    return ramp_up(R, X_int, a_int, b_int)
+end
+
+
+"""
+    ramp_down(X::AbstractRange{<:Real}, a::Real, b::Real)
+Generates a "ramp down" weight vector over the range X, transitioning from 0 to 1
+between points a and b. 
+
+only weights for the X range are outputted.
+"""
+function ramp_down(::Type{R}, X::AbstractRange{<:T}, a::T, b::T) where {R <: AbstractFloat, T <: Integer}
+    return 1 .- ramp_up(R, X, a, b)
+end
+
+
+"""
+    ramp_down(X::StepRange{Date, T}, a::Date, b::Date) where {T <: Period}
+Generates a "ramp down" weight vector over the date range X, transitioning from 0 to 1
+between dates a and b. 
+
+only weights for the X range are outputted.
+"""
+function ramp_down(::Type{R}, X::StepRange{Date, T}, a::Date, b::Date) where {T <: Period, R <: AbstractFloat}
+    return 1 .- ramp_up(R, X, a, b)
 end
 
 
@@ -251,19 +262,43 @@ function (inflfn::InflationSplice)(cs::CountryStructure, ::CPIVarInterm)
     return convert(Array{eltype(cs)}, OUT)
 end
 
+
+"""
+    (inflfn::InflationSplice)(cs::CountryStructure)
+Evaluate the InflationSplice function on a given CountryStructure `cs`.
+"""
 function (inflfn::InflationSplice)(cs::CountryStructure)
     cpi_index = inflfn(cs, CPIIndex())
     return varinteran(cpi_index)
 end
 
+
+"""
+    (inflfn::InflationSplice)(cs::CountryStructure, ::CPIIndex)
+Evaluate the InflationSplice function on a given CountryStructure `cs` and 
+returning the corresponding CPIIndex.
+"""
 function (inflfn::InflationSplice)(cs::CountryStructure, ::CPIIndex)
     v_interm = inflfn(cs, CPIVarInterm())
     capitalize!(v_interm, 100)
     return v_interm
 end
 
-#### CON FECHA
 
+"""
+    (inflfn::InflationSplice)(cs::CountryStructure, ::CPIVarInterm, date::Date)
+
+Evaluate the InflationSplice function on a given CountryStructure `cs`, 
+returning the corresponding CPIVarInterm.
+
+If no transition dates are specified, the function concatenates the intermediate
+monthly variations from each inflation function directly, assuming that each
+function corresponds to a different base in the CountryStructure.
+
+If transition dates are provided, it creates "ramp down" and "ramp up" weights 
+to smoothly transition between the results of the different inflation functions
+over the specified date intervals.
+"""
 function (inflfn::InflationSplice)(cs::CountryStructure, ::CPIVarInterm, date::Date)
     f = inflfn.f
     dates = inflfn.dates
@@ -297,31 +332,57 @@ function (inflfn::InflationSplice)(cs::CountryStructure, ::CPIVarInterm, date::D
     return convert(Array{eltype(cs)}, OUT)
 end
 
+
+"""
+    (inflfn::InflationSplice)(cs::CountryStructure, date::Date)
+Evaluate the InflationSplice function on a given CountryStructure `cs`,
+starting from a specific date.
+"""
 function (inflfn::InflationSplice)(cs::CountryStructure, date::Date)
     cpi_index = inflfn(cs, CPIIndex(), date)
     return varinteran(cpi_index)
 end
 
+
+"""
+    (inflfn::InflationSplice)(cs::CountryStructure, ::CPIIndex)
+Evaluate the InflationSplice function on a given CountryStructure `cs`,
+starting from a specific date and returning the corresponding CPIIndex.
+"""
 function (inflfn::InflationSplice)(cs::CountryStructure, ::CPIIndex, date::Date)
     v_interm = inflfn(cs, CPIVarInterm(), date::Date)
     capitalize!(v_interm, 100)
     return v_interm
 end
 
-#############################################################################
-## FUNCIONES ADICIONALES
-##############################################################################
 
+"""
+    measure_name(inflfn::InflationSplice)
+Return the name of all the InflationFunction components of the InflationSplice,
+concatenated with "--" as separator, unless a specific name is provided.
+"""
 function measure_name(inflfn::InflationSplice)
     isnothing(inflfn.name) || return inflfn.name
     return string((measure_name.(inflfn.f) .* "--")...)[1:(end - 4)]
 end
 
+
+"""
+    measure_tag(inflfn::InflationSplice)
+Return the tag of all the InflationFunction components of the InflationSplice,
+concatenated with "--" as separator, unless a specific name is provided.
+"""
 function measure_tag(inflfn::InflationSplice)
     isnothing(inflfn.tag) || return inflfn.tag
     return string((measure_tag.(inflfn.f) .* "--")...)[1:(end - 4)]
 end
 
+
+"""
+    splice_length(inflfn::InflationFunction)
+Return the number of inflation functions in the InflationSplice.
+If the input is not an InflationSplice, return 1.
+"""
 function splice_length(inflfn::InflationFunction)
     if !(inflfn isa InflationSplice)
         return 1
@@ -330,6 +391,12 @@ function splice_length(inflfn::InflationFunction)
     end
 end
 
+
+"""
+    splice_inflfns(inflfn::InflationFunction)
+Return the vector of inflation functions in the InflationSplice.
+If the input is not an InflationSplice, return the input itself.
+"""
 function splice_inflfns(inflfn::InflationFunction)
     if !(inflfn isa InflationSplice)
         return inflfn
@@ -338,6 +405,12 @@ function splice_inflfns(inflfn::InflationFunction)
     end
 end
 
+
+"""
+    splice_dates(inflfn::InflationFunction)
+Return the vector of transition date tuples in the InflationSplice.
+If the input is not an InflationSplice, return NaN.
+"""
 function splice_dates(inflfn::InflationFunction)
     if !(inflfn isa InflationSplice)
         return NaN
@@ -345,6 +418,13 @@ function splice_dates(inflfn::InflationFunction)
     return inflfn.dates
 end
 
+
+"""
+    components(inflfn::InflationSplice)
+Return a DataFrame with the components of the InflationSplice, including
+the measure names and weights of each inflation function, as well as the
+transition dates if specified.
+"""
 function components(inflfn::InflationSplice)
     if isnothing(inflfn.dates)
         if inflfn.f isa Vector{CombinationFunction{A, B}} where {A} where {B}
@@ -355,11 +435,6 @@ function components(inflfn::InflationSplice)
                     )
                     for x in inflfn.f
             ]
-            #D = hcat([ hcat([measure_name(y.f[i]) for y in inflfn.f[i].ensemble.functions],inflfn.f[i].weights) for i in 1:length(inflfn.f)]...)
-            #cols = vcat([[measure_name(x),measure_tag(x)*"_w"] for x in inflfn.f]...)
-            #f(x::CombinationFunction) = DataFrame([measure_name(x, return_array=true),x.weights],[measure_name(x),measure_tag(x)*"_w"])
-            #components = hcat(f.(inflfn.f)..., makeunique=true)
-            #components = DataFrame(D,cols)
         else
             components = DataFrame(
                 measure = measure_name.(inflfn.f)
