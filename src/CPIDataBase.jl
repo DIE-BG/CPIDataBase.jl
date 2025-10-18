@@ -25,8 +25,6 @@ export capitalize, varinterm, varinteran,
 # Exportar tipos para implementar nuevas funciones de inflación
 export InflationFunction, EnsembleInflationFunction
 export EnsembleFunction, CombinationFunction
-export InflationSpliceFunction, InflationSplice, InflationSpliceUnweighted
-export ramp_down, ramp_up, splice_length, splice_functions, splice_dates, components
 export InflationEnsemble, InflationCombination # alias de los 2 anteriores
 export components # componentes de una InflationCombination
 export num_measures, weights, measure_name, measure_tag, params
@@ -50,7 +48,6 @@ include("utils/varinteran.jl")
 include("inflation/InflationFunction.jl")
 include("inflation/EnsembleFunction.jl")
 include("inflation/CombinationFunction.jl")
-include("inflation/InflationSpliceFunction.jl")
 
 # Medida de inflación básica
 include("inflation/InflationTotalCPI.jl")
@@ -58,6 +55,15 @@ include("inflation/InflationTotalCPI.jl")
 # Funciones de utilidad
 export getdates
 include("utils/utils.jl")
+
+##  ------------------------------------------------------------------------
+#   Inflation Splice Functions
+#   ------------------------------------------------------------------------
+include("inflation/InflationSpliceFunction.jl")
+
+export InflationSpliceFunction, InflationSplice, InflationSpliceUnweighted,
+    ramp_down, ramp_up, splice_length, splice_functions, splice_dates, components
+
 
 ##  ------------------------------------------------------------------------
 #   Funcionalidades de árboles de cómputo del IPC
