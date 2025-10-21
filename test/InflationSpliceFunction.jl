@@ -161,6 +161,12 @@ using Test
     # Testing the instantiation of an InflationSplice
     @testset "Instantiating a InflationSplice" begin
 
+        # inflation functions and dates for testing InflationSplice
+        inflfn = [InflationPercentileEq(0.25), InflationPercentileEq(0.5), InflationPercentileEq(0.75)]
+        dates = [
+            (Date(0, 2), Date(0, 4)),
+            (Date(0, 9), Date(0, 12)),
+        ]
 
         #not enough functions
         @test_throws "ArgumentError" InflationSplice(
