@@ -67,13 +67,27 @@ struct InflationSplice <: InflationSpliceFunction
     name::Union{Nothing, AbstractString}
     tag::Union{Nothing, AbstractString}
 
+    """
+        InflationSplice(
+            f::Vector{<:InflationFunction};
+            dates::Union{Nothing, Vector{Tuple{Date, Date}}} = nothing,
+            name::Union{Nothing, AbstractString} = nothing,
+            tag::Union{Nothing, AbstractString} = nothing
+        )
+
+    Create an InflationSplice function from a vector of InflationFunction `f`, using the provided
+    transition date intervals `dates`. The length of `f` must be one greater than the length of `dates`.
+    """
     function InflationSplice(
-            f_ramp_down::Vector{<:InflationFunction},
-            f_ramp_up::Vector{<:InflationFunction},
+            f::Vector{<:InflationFunction};
             dates::Vector{Tuple{Date, Date}},
             name::Union{Nothing, AbstractString} = nothing,
             tag::Union{Nothing, AbstractString} = nothing
         )
+
+        f_ramp_down = f[1:(end - 1)]
+
+        f_ramp_up = f[2:end]
 
         _validate_dates(dates)
 
@@ -83,30 +97,8 @@ struct InflationSplice <: InflationSpliceFunction
         length(dates) == length(f_ramp_down) && length(dates) == length(f_ramp_up) ||
             throw(ArgumentError("The number of date intervals must match the number of functions in f_ramp_down and f_ramp_up."))
 
-
         return new(f_ramp_down, f_ramp_up, dates, name, tag)
     end
-end
-
-
-"""
-    InflationSplice(
-        f::Vector{<:InflationFunction};
-        dates::Union{Nothing, Vector{Tuple{Date, Date}}} = nothing,
-        name::Union{Nothing, AbstractString} = nothing,
-        tag::Union{Nothing, AbstractString} = nothing
-    )
-
-Create an InflationSplice function from a vector of InflationFunction `f`, using the provided
-transition date intervals `dates`. The length of `f` must be one greater than the length of `dates`.
-"""
-function InflationSplice(
-        f::Vector{<:InflationFunction};
-        dates::Vector{Tuple{Date, Date}},
-        name::Union{Nothing, AbstractString} = nothing,
-        tag::Union{Nothing, AbstractString} = nothing
-    )
-    return InflationSplice(f[1:(end - 1)], f[2:end], dates, name, tag)
 end
 
 
