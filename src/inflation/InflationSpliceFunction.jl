@@ -131,28 +131,22 @@ Evaluate the InflationSplice function on a given VarCPIBase `base`, returning th
 """
 function (sfn::InflationSplice)(base::VarCPIBase)
 
+    # Ordering the functions in a single vector for easier handling.
+    inflfn = [sfn.f_ramp_down..., sfn.f_ramp_up[end]]
+
+    # Getting the effective weights for each function in the splice. Te goal is to
+    # have a weight matrix of size (periods(base), length(inflfn)), where
+    # each row should sum to 1. and each column corresponds to the weight of
+    # each function in the splice.
+    effective_weights = _get_splice_weights(eltype(base), sfn, base.dates)
+
     # Preallocate output vector of m-o-m inflation
     v = zeros(eltype(base), periods(base))
 
-    # f_ramp_down is the function to be used before the transition dates
-    # f_ramp_up is the function to be used after the transition dates
-
-    # Because more that one transition period can be specified, we loop over
-    # all of them. For each one we have the corresponding f_ramp_down (f),
-    # f_ramp_up (g) functions and the transition dates in d.
-    for (f, g, d) in zip(sfn.f_ramp_down, sfn.f_ramp_up, sfn.dates)
-
-        # compute the weights for f_ramp_down. This will be 1 before the transition
-        # period and will ramp down to 0 during the transition period
-        f_w = ramp_down(eltype(base), base.dates, d...)
-        # compute the weights for f_ramp_up. This will be 0 before the transition
-        # period and will ramp up to 1 during the transition period
-        g_w = ramp_up(eltype(base), base.dates, d...)
-
-        # The output is the weighted sum of the two functions. Before the transition
-        # period, only f contributes, after the transition period, only g contributes,
-        # and during the transition period, both contribute according to their weights.
-        v = v .+ (f(base) .* f_w) .+ (g(base) .* g_w)
+    # Computing the weighted sum of the inflation functions over the base,
+    # using the effective weights computed before.
+    for (i, f) in enumerate(inflfn)
+        v = v .+ (effective_weights[:, i] .* f(base))
     end
 
     return v
@@ -302,6 +296,64 @@ only weights for the X range are outputted.
 """
 function ramp_down(::Type{R}, X::StepRange{Date, T}, a::Date, b::Date) where {T <: Period, R <: AbstractFloat}
     return 1 .- ramp_up(R, X, a, b)
+end
+
+
+"""
+    _get_splice_weights(
+        R::Type{<:AbstractFloat},
+        sfn::InflationSplice,
+        dates::StepRange{Date, T}
+    ) where {T <: Period}
+Helper function to compute the effective weights for each inflation function
+in the InflationSplice over the given date range.
+
+The output is a matrix of size (length(dates), number of functions in the splice),
+where each row sums to 1, meaning, only one or two functions are active at each date,
+with weights summing to 1.
+"""
+function _get_splice_weights(
+        R::Type{<:AbstractFloat},
+        sfn::InflationSplice,
+        dates::StepRange{Date, T}
+    ) where {T <: Period}
+
+    # Number of transition periods
+    Ntrans = length(sfn.dates)
+    # Number of inflation functions to combine
+    Nfn = Ntrans + 1
+
+    # Number of periods in the range
+    Nperiods = length(dates)
+
+    # Preallocate matrix to store the weights for each function
+    effective_weights = Matrix{R}(undef, Nperiods, Nfn)
+
+    # Constructing the ramp up and ramp down weight vectors for each transition period
+    ramp_weights = [ hcat(ramp_down(R, dates, d...), ramp_up(R, dates, d...)) for d in sfn.dates ]
+
+    # Computing the effective weights for each function in the splice.
+    # The first function is always ramped down.
+    effective_weights[:, 1] = ramp_weights[1][:, 1]
+    # The last function is always ramped up.
+    effective_weights[:, end] = ramp_weights[end][:, 2]
+
+    # If only one transition period, then we are done.
+    if Ntrans == 1
+        return effective_weights
+    end
+
+    # If we have more than transition period, then we need to compute the weights
+    # for the intermediate functions.
+
+    # In between, each function's weight is given by the ramp up and ramp down
+    # of the adjacent transition periods. Bacause the ramps sum to 1, we subtract 1.0
+    # to avoid double counting in non transition periods.
+    for i in 2:length(ramp_weights)
+        effective_weights[:, i] = ramp_weights[i - 1][:, 2] + ramp_weights[i][:, 1] .- 1.0
+    end
+
+    return effective_weights
 end
 
 
