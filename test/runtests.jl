@@ -20,8 +20,8 @@ include("operations.jl")
 # Inflation tests with MixedCountryStructure
 include("inflation.jl")
 
-# Trees creation and operations 
+# Trees creation and operations
 include("cpitree.jl")
 
-# InflationSplice tests 
-# to-do
+# InflationSplice tests
+include("InflationSpliceFunction.jl")
