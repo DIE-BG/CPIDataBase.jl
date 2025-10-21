@@ -259,4 +259,42 @@ using Test
     end
 
 
+    @testset "Calculations of an InflationSplice with only one transition period" begin
+        # Definition of the testing structures used throughout the tests
+        test_base = hcat(
+            collect(1.0:10.0),
+            collect(10.0:10.0:100.0),
+            collect(100.0:100.0:1_000.0)
+        )
+        test_base = Float16.(test_base)
+
+        test_weights = Float16.(1 / 3 .* ones(3))
+
+        test_dates_1 = Date(0, 1):Month(1):Date(0, 10)
+        test_dates_2 = Date(0, 11):Month(1):Date(1, 8)
+
+        test_base1 = VarCPIBase(
+            test_base,
+            test_weights,
+            test_dates_1,
+            Float16(100)
+        )
+
+        # inflation functions and dates for testing InflationSplice
+        inflfn = [InflationPercentileEq(0.25), InflationPercentileEq(0.5)]
+        dates = [
+            (Date(0, 2), Date(0, 4)),
+        ]
+
+        # Inflation Splice function instance for testing
+        splicefn = InflationSplice(inflfn; dates = dates)
+
+        # The true results calculated manually
+        true_result_1 = Float16.([5.5, 11, 23.25, 40, 50, 60, 70, 80, 90, 100])
+
+        test_1 = splicefn(test_base1)
+
+        @test all(test_1 .== true_result_1)
+    end
+
 end
