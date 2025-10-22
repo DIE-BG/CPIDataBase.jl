@@ -216,7 +216,7 @@ end
 This helper function validates that the input vector of date tuples meets the following criteria:
 
 1) Within each tuple: ini < fin
-2) Between consecutive tuples: fin[i] < ini[i+1]  (ascending temporal order and no overlap)
+2) Between consecutive tuples: fin[i] < ini[i+1], meaning ascending temporal order and no overlap
 """
 function _validate_dates(dates::Vector{Tuple{Date, Date}})
     # inside each tuple: tuple[1] < tuple[2]
