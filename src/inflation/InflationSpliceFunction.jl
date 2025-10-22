@@ -2,15 +2,17 @@
 
 """
     InflationSpliceFunction <: InflationFunction
+
 Abstract type for inflation functions that splice the results of several inflation
-functions over transition date intervals of VarCPIBase in a CountryStructure.
+functions over transition date intervals of `VarCPIBase` in a `CountryStructure`.
 """
 abstract type InflationSpliceFunction <: InflationFunction end
 
 
 """
     splice_length(inflfn::InflationSpliceFunction)
-Return the number of inflation functions in the InflationSpliceFunction.
+
+Return the number of inflation functions in the `InflationSpliceFunction`.
 """
 function splice_length(inflfn::InflationSpliceFunction)
     return @error "Extend this methods for other InflationSpliceFunction types."
@@ -19,7 +21,8 @@ end
 
 """
     splice_functions(inflfn::InflationSpliceFunction)
-Return the vector of inflation functions in the InflationSplice.
+
+Return the vector of inflation functions in `the InflationSpliceFunction`.
 """
 function splice_functions(inflfn::InflationSpliceFunction)
     return @error "Extend this methods for other InflationSpliceFunction types."
@@ -28,7 +31,8 @@ end
 
 """
     splice_dates(inflfn::InflationSpliceFunction)
-Return the vector of transition date tuples in the InflationSplice.
+
+Return the vector of transition date tuples in the `InflationSpliceFunction`.
 """
 function splice_dates(inflfn::InflationSpliceFunction)
     return @error "Extend this methods for other InflationSpliceFunction types."
@@ -37,7 +41,8 @@ end
 
 """
     components(inflfn::InflationSpliceFunction)
-Return a DataFrame with the components of the InflationSplice, including
+
+Return a `DataFrame` with the components of the `InflationSpliceFunction`, including
 the measure names and weights of each inflation function, as well as the
 transition dates if specified.
 """
@@ -54,11 +59,12 @@ end
 Inflation Function for splicing the results of several inflation functions over
 transition date intervals.
 
-f_ramp_down: Vector of InflationFunction to be used before the transition dates
-f_ramp_up: Vector of InflationFunction to be used after the transition dates
-dates: Vector of Tuple{Date, Date} indicating the transition intervals
-name: Optional name for the InflationSplice function
-tag: Optional tag for the InflationSplice function
+# Arguments
+- `f_ramp_down::Vector{<:InflationFunction}`: Inflation function for the beginning of the transition period.
+- `f_ramp_up::Vector{<:InflationFunction}`: Inflation function for the end of the transition period.
+- `dates::Vector{Tuple{Date, Date}}`: Limits of the transition period.
+- `name::Union{Nothing, AbstractString}`: Custom name for the inflation splice function.
+- `tag::Union{Nothing, AbstractString}`: Custom short name for the inflation splice function.
 """
 struct InflationSplice <: InflationSpliceFunction
     f_ramp_down::Vector{<:InflationFunction}
@@ -67,6 +73,7 @@ struct InflationSplice <: InflationSpliceFunction
     name::Union{Nothing, AbstractString}
     tag::Union{Nothing, AbstractString}
 
+
     """
         InflationSplice(
             f::Vector{<:InflationFunction};
@@ -74,9 +81,14 @@ struct InflationSplice <: InflationSpliceFunction
             name::Union{Nothing, AbstractString} = nothing,
             tag::Union{Nothing, AbstractString} = nothing
         )
-
-    Create an InflationSplice function from a vector of InflationFunction `f`, using the provided
-    transition date intervals `dates`. The length of `f` must be one greater than the length of `dates`.
+    
+    Instantiates an `InflationSplice` function.
+    
+    # Arguments
+    - `f::Vector{<:InflationFunction}`: Inflation function for each transition period.
+    - `dates::Vector{Tuple{Date, Date}}`: Transition periods.
+    - `name::Union{Nothing, AbstractString}=nothing`: Custom name for the inflation splice.
+    - `tag::Union{Nothing, AbstractString}=nothing`: Custom short name for the inflation splice.
     """
     function InflationSplice(
             f::Vector{<:InflationFunction};
@@ -105,13 +117,20 @@ end
 """
     InflationSplice(
         f::Vararg{<:InflationFunction};
-        dates::Union{Nothing, Vector{Tuple{Date, Date}}} = nothing,
+        dates::Union{Nothing, Vector{Tuple{Date, Date}}},
         name::Union{Nothing, AbstractString} = nothing,
         tag::Union{Nothing, AbstractString} = nothing
     )
-Create an InflationSplice function from a variable number of InflationFunction `f`, using the provided
+
+Create an `InflationSplice` function from a variable number of InflationFunction `f`, using the provided
 transition date intervals `dates`. The number of functions in `f` must be one greater than
 the length of `dates`.
+
+# Arguments
+- `f::{<:InflationFunction}`: Inflation functions for each transition period.
+- `dates::Vector{Tuple{Date, Date}}`: Transition periods.
+- `name::Union{Nothing, AbstractString}=nothing`: Custom name for the inflation splice.
+- `tag::Union{Nothing, AbstractString}=nothing`: Custom short name for the inflation splice.
 """
 function InflationSplice(
         f::Vararg{<:InflationFunction};
@@ -126,8 +145,7 @@ end
 """
     (inflfn::InflationSplice)(base::VarCPIBase)
 
-
-Evaluate the InflationSplice function on a given VarCPIBase `base`, returning the corresponding CPIVarInterm.
+Evaluate the InflationSplice function on a given `VarCPIBase` base, returning the corresponding `::CPIVarInterm`.
 """
 function (sfn::InflationSplice)(base::VarCPIBase)
 
@@ -153,11 +171,6 @@ function (sfn::InflationSplice)(base::VarCPIBase)
 end
 
 
-"""
-    measure_name(inflfn::InflationSplice)
-Return the name of all the InflationFunction components of the InflationSplice,
-concatenated with "--" as separator, unless a specific name is provided.
-"""
 function measure_name(inflfn::InflationSplice)
     s_ramp_down = string((measure_name.(inflfn.f_ramp_down) .* "--")...)
     s_last = string(measure_name.(inflfn.f_ramp_up[end]))
@@ -201,6 +214,7 @@ end
     _validate_dates(dates::Vector{Tuple{Date, Date}})
 
 This helper function validates that the input vector of date tuples meets the following criteria:
+
 1) Within each tuple: ini < fin
 2) Between consecutive tuples: fin[i] < ini[i+1]  (ascending temporal order and no overlap)
 """
@@ -277,6 +291,7 @@ end
 
 """
     ramp_down(::Type{R}, X::AbstractRange{<:T}, a::T, b::T) where {R <: AbstractFloat, T <: Integer}
+
 Generates a "ramp down" weight vector over the range X, transitioning from 0 to 1
 between points a and b. 
 
@@ -289,6 +304,7 @@ end
 
 """
     ramp_down(::Type{R}, X::StepRange{Date, T}, a::Date, b::Date) where {T <: Period, R <: AbstractFloat}
+
 Generates a "ramp down" weight vector over the date range X, transitioning from 0 to 1
 between dates a and b. 
 
@@ -305,6 +321,7 @@ end
         sfn::InflationSplice,
         dates::StepRange{Date, T}
     ) where {T <: Period}
+
 Helper function to compute the effective weights for each inflation function
 in the InflationSplice over the given date range.
 
@@ -361,6 +378,7 @@ end
 
 """
     InflationSpliceUnweighted <: InflationSpliceFunction
+
 Inflation Function for splicing the results of several inflation functions over
 the different VarCPIBase in a CountryStructure, without transition periods, just
 stacking the results of each function over each base.
@@ -386,6 +404,7 @@ end
         name::Union{Nothing, AbstractString} = nothing,
         tag::Union{Nothing, AbstractString} = nothing
     )
+
 Create an InflationSpliceUnweighted function from a vector of InflationFunction `f`.
 """
 function InflationSpliceUnweighted(
@@ -403,6 +422,7 @@ end
         name::Union{Nothing, AbstractString} = nothing,
         tag::Union{Nothing, AbstractString} = nothing
     )
+
 Create an InflationSpliceUnweighted function from a variable number of InflationFunction `f`.
 """
 function InflationSpliceUnweighted(

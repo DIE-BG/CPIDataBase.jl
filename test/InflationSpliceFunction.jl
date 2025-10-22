@@ -11,23 +11,30 @@ using Test
         up = ramp_up(T, 1:10, 1, 10)
         down = ramp_down(T, 1:10, 1, 10)
 
+        # Testing if the output is of the specified type and has the correct length
         @test isa(up, Vector{T}) && length(up) == 10
         @test isa(down, Vector{T}) && length(down) == 10
     end
-    #testing ramp_up and ramp_down for different types of invalid inputs
+
+    #testing ramp_up and ramp_down for different types of invalid inputs.
     @testset "Errors for ramp_up and ramp_down with invalid inputs" begin
+        # Not floats are allowed for the limits
         @test_throws MethodError ramp_up(Float32, 1:10, 2.5, 8.9)
         @test_throws MethodError ramp_down(Float32, 1:10, 2.5, 8.9)
+        # The range should be of integer type
         @test_throws MethodError ramp_up(Float32, range(1.0, 10.0, step = 1.0), 2.5, 8.9)
         @test_throws MethodError ramp_down(Float32, range(1.0, 10.0, step = 1.0), 2.5, 8.9)
+        # Not strings are allowed for the limits
         @test_throws MethodError ramp_up(Float32, 1:10, 2.5, "a")
         @test_throws MethodError ramp_down(Float32, 1:10, 2.5, "a")
+        # Not mixtures with Date are allowed
         @test_throws MethodError ramp_up(Float32, 1:10, Date(2000), 5)
         @test_throws MethodError ramp_up(Float32, 1:10, Date(2000), Date(2001))
     end
 
     # testing ramp_up and ramp_down with Date inputs
     @testset "ramp_up and ramp_down with Date as input" begin
+        # Testing if the the version for Dates works and returns the correct type
         @test isa(
             ramp_up(Float32, Date(2010, 1):Date(2010, 10), Date(2010, 10), Date(2010, 1)),
             Vector{Float32}
@@ -49,6 +56,8 @@ using Test
     # Testing the behavior of ramp_up and ramp_down with different input types,
     # comparing the results with manually constructed reference vectors
     @testset "Behavior of ramp_up and ramp_down when inputs are integers" begin
+        # Testing that the output match with the manually constructed reference vectors
+        # in lengths, values and types
         @test all(
             ramp_up(Float16, 1:10, 1, 10) .== collect(range(Float16(0), Float16(1), length = 10))
         )
@@ -210,6 +219,7 @@ using Test
     # testing the calculations of an InflationSplice
     @testset "Calculations of an InflationSplice" begin
         # Definition of the testing structures used throughout the tests
+        # First, we need a VarCPIBase and a CountryStructure
         test_base = hcat(
             collect(1.0:10.0),
             collect(10.0:10.0:100.0),
@@ -241,24 +251,27 @@ using Test
             test_base2
         )
 
-        # inflation functions and dates for testing InflationSplice
+        # Then, we need the inflation functions and transition dates that define the InflationSplice
         inflfn = [InflationPercentileEq(0.25), InflationPercentileEq(0.5), InflationPercentileEq(0.75)]
         dates = [
             (Date(0, 2), Date(0, 4)),
             (Date(0, 9), Date(0, 12)),
         ]
 
-        # Inflation Splice function instance for testing
+        # We instantiate the Inflation Splice function for testing
         splicefn = InflationSplice(inflfn; dates = dates)
 
-        # The true results calculated manually
+        # For the test, we are going to use the following manually calculated true results
         true_result_1 = Float16.([5.5, 11, 23.25, 40, 50, 60, 70, 80, 90, 250])
         true_result_2 = Float16.([40, 110, 165, 220, 275, 330, 385, 440, 495, 550])
 
+        # The manually calculated results from applying the InflationSplice will 
+        # be compared with the results from applying the splicefn
         test_1 = splicefn(test_base1)
         test_2 = splicefn(test_base2)
         test_3 = splicefn(test_countryStructure, CPIVarInterm())
 
+        # Finally, we verify that the results match
         @test all(test_1 .== true_result_1)
         @test all(test_2 .== true_result_2)
         @test all(test_3 .== vcat(true_result_1, true_result_2))
@@ -266,7 +279,10 @@ using Test
 
 
     @testset "Calculations of an InflationSplice with only one transition period" begin
-        # Definition of the testing structures used throughout the tests
+        # This test is similar to the previous one, but now we only have one transition period.
+        # This is to verify that the function works correctly in this simpler case.
+
+        # As before, we need a VarCPIBase for the test
         test_base = hcat(
             collect(1.0:10.0),
             collect(10.0:10.0:100.0),
@@ -286,20 +302,21 @@ using Test
             Float16(100)
         )
 
-        # inflation functions and dates for testing InflationSplice
+        # Also, we need the inflation functions and transition dates for the InflationSplice
         inflfn = [InflationPercentileEq(0.25), InflationPercentileEq(0.5)]
         dates = [
             (Date(0, 2), Date(0, 4)),
         ]
 
-        # Inflation Splice function instance for testing
+        # We instantiate the Inflation Splice function for testing
         splicefn = InflationSplice(inflfn; dates = dates)
 
-        # The true results calculated manually
+        # And we define the manually calculated true results for comparison
         true_result_1 = Float16.([5.5, 11, 23.25, 40, 50, 60, 70, 80, 90, 100])
 
         test_1 = splicefn(test_base1)
 
+        # Finally, we verify that the results match
         @test all(test_1 .== true_result_1)
     end
 
