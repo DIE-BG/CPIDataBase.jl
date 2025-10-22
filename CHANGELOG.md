@@ -1,3 +1,9 @@
+## [Unreleased] 
+
+## Changed
+
+- The `Splice` function has been redefined by introducing the abstract type `InflationSpliceFunction` and implementing their concrete behavior in the `InflationSplice` struct. The function now operates directly on a `VarCPIBase`, as all other inflation functions are required to do.
+
 ## [0.6.24]
 
 ### Changed
