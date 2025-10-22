@@ -1,4 +1,4 @@
-# ABSTRACT INFLATION SPLICE TYPE
+## InflationSpliceFunction.jl - Splicing Inflation Functions over Transition Dates
 
 """
     InflationSpliceFunction <: InflationFunction
