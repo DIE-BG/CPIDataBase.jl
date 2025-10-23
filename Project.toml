@@ -1,6 +1,6 @@
 name = "CPIDataBase"
 uuid = "bc2aee9a-d1f8-4cce-8750-9c1afc923989"
-version = "0.6.24"
+version = "0.6.25"
 authors = ["Rodrigo Chang and DIE-BG collaborators"]
 
 [deps]
@@ -15,8 +15,8 @@ Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 AbstractTrees = ">= 0.3"
 DataFrames = ">= 1"
 PrettyTables = ">= 1"
-Printf = "1.11.0"
-Statistics = "1.11.1"
+Printf = ">=1.11"
+Statistics = ">=1.11"
 julia = ">= 1.11"
 
 [extras]
