@@ -1,0 +1,6 @@
+[deps]
+CPIDataGT = "39a16359-57f0-4aba-960c-77dbb3b4d29c"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
+InflationFunctions = "3d0454e0-948f-4743-b998-4d73da99f8a8"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
