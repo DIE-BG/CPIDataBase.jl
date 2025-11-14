@@ -5,7 +5,7 @@ struct InflationTotalCPI <: InflationFunction
 end
 
 # Extender el método para obtener el nombre de esta medida
-measure_name(::InflationTotalCPI) = "Variación interanual IPC"
+measure_name(::InflationTotalCPI) = "CPI Inflation"
 measure_tag(::InflationTotalCPI) = "Total"
 
 # Las funciones sobre VarCPIBase deben resumir en variaciones intermensuales

@@ -4,6 +4,7 @@
 ### Changed
 
 - The `Splice` function has been redefined by introducing the abstract type `InflationSpliceFunction` and implementing their concrete behavior in the `InflationSplice` struct. The function now operates directly on a `VarCPIBase`, as all other inflation functions are required to do.
+- Redefined `measure_name` for the `InflationTotalCPI`.
 
 ## [0.6.24] 2025-10
 
