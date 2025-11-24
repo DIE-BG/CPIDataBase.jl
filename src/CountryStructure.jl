@@ -102,6 +102,16 @@ function _base_index(cst, date, retfirst=true)
     end
 end
 
+# Helper function to create a sliced VarCPIBase
+function _slice_varbase(base::VarCPIBase, row_range)
+    VarCPIBase(
+        base.v[row_range, :], 
+        copy(base.w), 
+        base.dates[row_range], 
+        copy(base.baseindex)
+    )
+end
+
 
 """
     getindex(cst::CountryStructure, startdate::Date, finaldate::Date)
@@ -119,24 +129,15 @@ function getindex(cst::CountryStructure, startdate::Date, finaldate::Date)
     if start_base == final_base
         # copy same base and slice
         @debug "Fechas en la misma base"
-        # @info bases[1]
-        onlybase = bases[1]
-        newbase = VarCPIBase(
-            onlybase.v[start_index:final_index, :], 
-            copy(onlybase.w), onlybase.dates[start_index:final_index], copy(onlybase.baseindex))
-        
+        newbase = _slice_varbase(bases[1], start_index:final_index)
         return getunionalltype(cst)(newbase)
     else 
         # different bases
         @debug "Fechas en diferentes bases"
         firstbase = first(bases)
         lastbase = last(bases)
-        newstart = VarCPIBase(
-            firstbase.v[start_index:end, :], 
-            copy(firstbase.w), firstbase.dates[start_index:end], copy(firstbase.baseindex))
-        newfinal = VarCPIBase(
-            lastbase.v[begin:final_index, :], 
-            copy(lastbase.w), lastbase.dates[begin:final_index], copy(lastbase.baseindex))
+        newstart = _slice_varbase(firstbase, start_index:lastindex(firstbase.dates))
+        newfinal = _slice_varbase(lastbase, 1:final_index)
         
         if final_base - start_base > 1
             # more than one base

@@ -273,8 +273,7 @@ function VarCPIBase(df::DataFrame, gb::DataFrame)
 end
 
 function VarCPIBase(base::FullCPIBase)
-    nbase = deepcopy(base)
-    VarCPIBase(nbase.v, nbase.w, nbase.dates, nbase.baseindex)
+    VarCPIBase(base.v, base.w, base.dates, base.baseindex)
 end
 
 # Obtener VarCPIBase de IndexCPIBase con variaciones intermensuales
@@ -298,8 +297,7 @@ function IndexCPIBase(df::DataFrame, gb::DataFrame)
 end
 
 function IndexCPIBase(base::FullCPIBase) 
-    nbase = deepcopy(base)
-    IndexCPIBase(nbase.ipc, nbase.w, nbase.dates, nbase.baseindex)
+    IndexCPIBase(base.ipc, base.w, base.dates, base.baseindex)
 end
 
 # Obtener IndexCPIBase de VarCPIBase con capitalización intermensual
