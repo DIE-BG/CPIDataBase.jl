@@ -148,6 +148,16 @@ end
 ## Constructores
 # Los constructores entre tipos crean copias y asignan nueva memoria
 
+# Helper function to get the data field (v or ipc) from a base
+"""
+    _get_data_field(base::AbstractCPIBase)
+
+Helper function to get the appropriate data field from a CPIBase object.
+Returns :v for VarCPIBase and FullCPIBase, or :ipc for IndexCPIBase.
+"""
+_get_data_field(base::Union{VarCPIBase, FullCPIBase}) = :v
+_get_data_field(base::IndexCPIBase) = :ipc
+
 function _getbaseindex(baseindex)
     if length(unique(baseindex)) == 1
         return baseindex[1]
@@ -341,7 +351,7 @@ function _formatdate(fecha)
 end
 
 function summary(io::IO, base::AbstractCPIBase)
-    field = hasproperty(base, :v) ? :v : :ipc
+    field = _get_data_field(base)
     periods, ngoods = size(getproperty(base, field))
     print(io, typeof(base), ": ", periods, " periods × ", ngoods, " items ")
     datestart, dateend = _formatdate.((first(base.dates), last(base.dates)))
@@ -356,7 +366,7 @@ end
 function show(io::IO, base::Union{VarCPIBase, IndexCPIBase})
     summary(io, base)
     println(io)
-    field = hasproperty(base, :v) ? :v : :ipc
+    field = _get_data_field(base)
     PrettyTables.pretty_table(
         io, getproperty(base, field);
         row_labels = base.dates,
@@ -393,7 +403,7 @@ end
 Computa el número de períodos (meses) en las base de datos.
 """
 function periods(base::AbstractCPIBase)
-    field = hasproperty(base, :v) ? :v : :ipc
+    field = _get_data_field(base)
     periods = size(getproperty(base, field), 1)
     periods
 end
@@ -405,7 +415,7 @@ end
 Computa el número de productos en las base de datos.
 """
 function items(base::AbstractCPIBase)
-    field = hasproperty(base, :v) ? :v : :ipc
+    field = _get_data_field(base)
     ngoods = size(getproperty(base, field), 2)
     ngoods
 end

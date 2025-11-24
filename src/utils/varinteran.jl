@@ -45,11 +45,7 @@ end
 function varinteran(cpimat::AbstractMatrix, base_index::Real = 100)
     r, c = size(cpimat)
     vmat = zeros(eltype(cpimat), r-11, c)
-    for j in 1:c
-        vcol = @view vmat[:, j]
-        idxcol = @view cpimat[:, j]
-        varinteran!(vcol, idxcol, base_index)
-    end
+    _apply_to_columns(varinteran!, cpimat, vmat, base_index)
     vmat
 end
 
@@ -57,10 +53,6 @@ end
 function varinteran(cpimat::AbstractMatrix, base_index::AbstractVector)
     r, c = size(cpimat)
     vmat = zeros(eltype(cpimat), r-11, c)
-    for j in 1:c
-        vcol = @view vmat[:, j]
-        idxcol = @view cpimat[:, j]
-        varinteran!(vcol, idxcol, base_index[j])
-    end
+    _apply_to_columns(varinteran!, cpimat, vmat, base_index)
     vmat
 end

@@ -44,24 +44,14 @@ function varinterm(idx::AbstractVector, base_index::Real = 100)
 end
 
 function varinterm(cpimat::AbstractMatrix, base_index::Real = 100)
-    c = size(cpimat, 2)
     vmat = similar(cpimat)
-    for j in 1:c
-        vcol = @view vmat[:, j]
-        idxcol = @view cpimat[:, j]
-        varinterm!(vcol, idxcol, base_index)
-    end
+    _apply_to_columns(varinterm!, cpimat, vmat, base_index)
     vmat
 end
 
 function varinterm(cpimat::AbstractMatrix, base_index::AbstractVector)
-    c = size(cpimat, 2)
     vmat = similar(cpimat)
-    for j in 1:c
-        vcol = @view vmat[:, j]
-        idxcol = @view cpimat[:, j]
-        varinterm!(vcol, idxcol, base_index[j])
-    end
+    _apply_to_columns(varinterm!, cpimat, vmat, base_index)
     vmat
 end
 
