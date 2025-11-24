@@ -21,6 +21,16 @@ end
 
 
 """
+    _createbase(vmat::Matrix{T}, G::Int, startdate::Date, baseindex) where T
+Helper function to create a VarCPIBase from a variation matrix.
+"""
+function _createbase(vmat::Matrix{T}, G::Int, startdate::Date, baseindex) where T
+    w = getrandomweights(T, G)
+    dates = getbasedates(vmat, startdate)
+    VarCPIBase(vmat, w, dates, baseindex)
+end
+
+"""
     getzerobase( 
         [T_type = Float32, 
         G = 218, 
@@ -33,9 +43,7 @@ iguales a cero.
 """
 function getzerobase(T_type=Float32, G=218, T_periods=120, startdate=Date(2001,1), baseindex=100*one(T_type))
     vmat = zeros(T_type, T_periods, G)
-    w = getrandomweights(T_type, G)
-    dates = getbasedates(vmat, startdate)
-    VarCPIBase(vmat, w, dates, baseindex)
+    _createbase(vmat, G, startdate, baseindex)
 end
 
 
@@ -81,7 +89,5 @@ function getrandombase(
     baseindex=100*one(T_type); 
 )
     vmat = rand(T_type, T_periods, G) / 2 
-    w = getrandomweights(T_type, G)
-    dates = getbasedates(vmat, startdate)
-    VarCPIBase(vmat, w, dates, baseindex)
+    _createbase(vmat, G, startdate, baseindex)
 end
