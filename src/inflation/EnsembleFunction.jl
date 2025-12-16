@@ -41,12 +41,28 @@ end
 
 # Método para obtener las trayectorias de inflación del conjunto
 # Se computan para cada medida y se concatenan horizontalmente
-function (ensfn::EnsembleFunction)(cs::CountryStructure, ::CPIVarInterm)
-    mapreduce(inflfn -> inflfn(cs, CPIVarInterm()), hcat, ensfn.functions)::Matrix{eltype(cs)}
+function (ensfn::EnsembleFunction)(cs::CountryStructure, cpi_result::CPIVarInterm)
+    ensfn(cs, cpi_result, nothing)
 end
 
 function (ensfn::EnsembleFunction)(cs::CountryStructure)
-    mapreduce(inflfn -> inflfn(cs), hcat, ensfn.functions)::Matrix{eltype(cs)}
+    ensfn(cs, nothing)
+end
+
+function (ensfn::EnsembleFunction)(cs::CountryStructure, ::CPIVarInterm, date::Union{Date, Nothing})
+    if isnothing(date)
+        mapreduce(inflfn -> inflfn(cs, CPIVarInterm()), hcat, ensfn.functions)::Matrix{eltype(cs)}
+    else
+        mapreduce(inflfn -> inflfn(cs, CPIVarInterm(), date), hcat, ensfn.functions)::Matrix{eltype(cs)}
+    end
+end
+
+function (ensfn::EnsembleFunction)(cs::CountryStructure, date::Union{Date, Nothing})
+    if isnothing(date)
+        mapreduce(inflfn -> inflfn(cs), hcat, ensfn.functions)::Matrix{eltype(cs)}
+    else
+        mapreduce(inflfn -> inflfn(cs, date), hcat, ensfn.functions)::Matrix{eltype(cs)}
+    end
 end
 
 ## Métodos de ayuda
@@ -58,15 +74,4 @@ Devuelve un `DataFrame` con las componentes del `EnsembleFunction`.
 """
 function components(inflfn::EnsembleFunction)
     DataFrame(measure = measure_name(inflfn))
-end
-
-
-# Método para obtener las trayectorias de inflación con fecha del conjunto 
-# Se computan para cada medida y se concatenan horizontalmente
-function (ensfn::EnsembleFunction)(cs::CountryStructure, ::CPIVarInterm, date::Date)
-    mapreduce(inflfn -> inflfn(cs, CPIVarInterm(), date), hcat, ensfn.functions)::Matrix{eltype(cs)}
-end
-
-function (ensfn::EnsembleFunction)(cs::CountryStructure, date::Date)
-    mapreduce(inflfn -> inflfn(cs, date), hcat, ensfn.functions)::Matrix{eltype(cs)}
 end

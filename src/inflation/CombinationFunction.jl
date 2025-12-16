@@ -73,17 +73,35 @@ end
 # Aplicación sobre (::CountryStructure, ::CPIVarInterm) ajusta los índices y
 # variaciones intermensuales para estar acordes con el promedio de las variaciones
 # interanuales 
-function (combfn::CombinationFunction)(cs::CountryStructure, ::CPIVarInterm)
-    cpi_index = combfn(cs, CPIIndex())
+function (combfn::CombinationFunction)(cs::CountryStructure, cpi_result::CPIVarInterm)
+    combfn(cs, cpi_result, nothing)
+end
+
+function (combfn::CombinationFunction)(cs::CountryStructure, cpi_result::CPIIndex)
+    combfn(cs, cpi_result, nothing)
+end
+
+# Aplicación sobre CountryStructure: devuelve la combinación lineal en
+# variaciones interanuales
+function (combfn::CombinationFunction)(cst::CountryStructure)
+    combfn(cst, nothing)
+end
+
+function (combfn::CombinationFunction)(cs::CountryStructure, ::CPIVarInterm, date::Union{Date, Nothing})
+    cpi_index = combfn(cs, CPIIndex(), date)
     varinterm!(cpi_index, cpi_index) # cpi_index -> v_interm
     cpi_index
 end
 
-function (combfn::CombinationFunction)(cs::CountryStructure, ::CPIIndex)
+function (combfn::CombinationFunction)(cs::CountryStructure, ::CPIIndex, date::Union{Date, Nothing})
     # Obtener variaciones interanuales 
-    v_yoy = combfn(cs)
+    v_yoy = combfn(cs, date)
     # Obtener variaciones intermensuales promedio para las primeras 11 observaciones
-    v_interm = mapreduce(inflfn -> inflfn(cs, CPIVarInterm()), hcat, combfn.ensemble.functions)::Matrix{eltype(cs)}
+    if isnothing(date)
+        v_interm = mapreduce(inflfn -> inflfn(cs, CPIVarInterm()), hcat, combfn.ensemble.functions)::Matrix{eltype(cs)}
+    else
+        v_interm = mapreduce(inflfn -> inflfn(cs, CPIVarInterm(), date), hcat, combfn.ensemble.functions)::Matrix{eltype(cs)}
+    end
     v_mean_interm = v_interm * combfn.weights
 
     T = periods(cs)
@@ -100,9 +118,9 @@ end
 
 # Aplicación sobre CountryStructure: devuelve la combinación lineal en
 # variaciones interanuales
-function (combfn::CombinationFunction)(cst::CountryStructure)
+function (combfn::CombinationFunction)(cst::CountryStructure, date::Union{Date, Nothing})
     # Get ensemble and compute trajectories
-    tray_infl = combfn.ensemble(cst)
+    tray_infl = isnothing(date) ? combfn.ensemble(cst) : combfn.ensemble(cst, date)
     # Return weighted sum
     tray_infl * combfn.weights
 end
@@ -123,44 +141,4 @@ function components(inflfn::CombinationFunction)
         weights = inflfn.weights
     )
     components
-end
-
-
-## CON FECHA 
-
-# Aplicación sobre (::CountryStructure, ::CPIVarInterm) ajusta los índices y
-# variaciones intermensuales para estar acordes con el promedio de las variaciones
-# interanuales 
-function (combfn::CombinationFunction)(cs::CountryStructure, ::CPIVarInterm, date::Date)
-    cpi_index = combfn(cs, CPIIndex(), date)
-    varinterm!(cpi_index, cpi_index) # cpi_index -> v_interm
-    cpi_index
-end
-
-function (combfn::CombinationFunction)(cs::CountryStructure, ::CPIIndex, date::Date)
-    # Obtener variaciones interanuales 
-    v_yoy = combfn(cs, date)
-    # Obtener variaciones intermensuales promedio para las primeras 11 observaciones
-    v_interm = mapreduce(inflfn -> inflfn(cs, CPIVarInterm(), date), hcat, combfn.ensemble.functions)::Matrix{eltype(cs)}
-    v_mean_interm = v_interm * combfn.weights
-
-    T = periods(cs)
-    cpi_index = zeros(eltype(cs), T+1)
-    cpi_index[1] = 100
-    # Completar las primeras 11 variaciones intermensuales 
-    cpi_index[2:12] .= capitalize(v_mean_interm[1:11])
-    # Capitalizar utilizando las variaciones interanuales 
-    for t = 13:T+1
-        cpi_index[t] = (v_yoy[t-12]/100 + 1) * cpi_index[t-12]
-    end
-    cpi_index[2:end]
-end
-
-# Aplicación sobre CountryStructure: devuelve la combinación lineal en
-# variaciones interanuales
-function (combfn::CombinationFunction)(cst::CountryStructure, date::Date)
-    # Get ensemble and compute trajectories
-    tray_infl = combfn.ensemble(cst, date)
-    # Return weighted sum
-    tray_infl * combfn.weights
 end
